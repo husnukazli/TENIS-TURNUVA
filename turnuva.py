@@ -15,7 +15,7 @@ tabs = st.tabs(["Grup 1", "Grup 2", "Grup 3", "Grup 4", "📊 PUAN DURUMU & AVER
 for i in range(4):
     grup_id = f"Grup {i+1}"
     with tabs[i]:
-        st.subheader(f"{grup_id} Ayarları")
+        st.subheader(f"{grup_id} Takımları")
         for t_idx in range(4):
             st.session_state.takimlar[grup_id][t_idx] = st.text_input(f"{t_idx+1}. Takım", value=st.session_state.takimlar[grup_id][t_idx], key=f"inp_{grup_id}_{t_idx}")
         
@@ -28,29 +28,21 @@ for i in range(4):
                     st.markdown(f"**{m1} vs {m2}**")
                     for tur in ["Tekler 1", "Tekler 2", "Çiftler"]:
                         key = f"{grup_id}_{gun}_{m1}_{m2}_{tur}"
-                        
-                        # Skor verilerini çek
-                        if key not in st.session_state.skorlar:
-                            st.session_state.skorlar[key] = ["", "", "", "", "", ""]
+                        if key not in st.session_state.skorlar: st.session_state.skorlar[key] = ["0","0","0","0","0","0"]
                         
                         cols = st.columns(6)
                         for idx in range(6):
                             # Her kutucuk kendi değerini session_state'den alır
-                            val_key = f"{key}_{idx}"
-                            if val_key not in st.session_state:
-                                st.session_state[val_key] = st.session_state.skorlar[key][idx]
-                            
-                            def update_skor(k=key, i=idx, vk=val_key):
-                                st.session_state.skorlar[k][i] = st.session_state[vk]
-                            
-                            cols[idx].text_input(f"P{idx+1}", key=val_key, on_change=update_skor)
+                            st.session_state.skorlar[key][idx] = cols[idx].text_input(f"P{idx+1}", value=st.session_state.skorlar[key][idx], key=f"{key}_{idx}")
 
-# --- PUAN DURUMU ---
+# --- PUAN DURUMU & AVERAJ ---
 with tabs[4]:
-    st.header("🏆 Puan Durumu")
+    st.header("🏆 Detaylı Puan Durumu")
     secilen_grup = st.selectbox("Grup Seçiniz:", ["Grup 1", "Grup 2", "Grup 3", "Grup 4"])
+    
     takimlar = st.session_state.takimlar[secilen_grup]
-    df = pd.DataFrame(0, index=takimlar, columns=["Seri Gal.", "Alt Maç Alınan", "Alt Maç Verilen"])
+    cols = ["Seri Gal.", "Maç Alınan", "Maç Verilen", "Set Alınan", "Set Verilen", "Oyun Alınan", "Oyun Verilen"]
+    df = pd.DataFrame(0, index=takimlar, columns=cols)
     
     for key, vals in st.session_state.skorlar.items():
         if secilen_grup in key:
@@ -63,14 +55,18 @@ with tabs[4]:
                 t1, t2 = parts[2], parts[3]
                 
                 if t1 in df.index:
+                    df.loc[t1, ["Set Alınan", "Set Verilen", "Oyun Alınan", "Oyun Verilen"]] += [t1_sets, t2_sets, sum(n[0::2]), sum(n[1::2])]
                     if t1_sets > t2_sets: 
-                        df.loc[t1, "Alt Maç Alınan"] += 1
-                        if df.loc[t1, "Alt Maç Alınan"] >= 2: df.loc[t1, "Seri Gal."] = 1
-                    else: df.loc[t1, "Alt Maç Verilen"] += 1
+                        df.loc[t1, "Maç Alınan"] += 1
+                    else: df.loc[t1, "Maç Verilen"] += 1
+                    if df.loc[t1, "Maç Alınan"] >= 2: df.loc[t1, "Seri Gal."] = 1
+                
                 if t2 in df.index:
+                    df.loc[t2, ["Set Alınan", "Set Verilen", "Oyun Alınan", "Oyun Verilen"]] += [t2_sets, t1_sets, sum(n[1::2]), sum(n[0::2])]
                     if t2_sets > t1_sets: 
-                        df.loc[t2, "Alt Maç Alınan"] += 1
-                        if df.loc[t2, "Alt Maç Alınan"] >= 2: df.loc[t2, "Seri Gal."] = 1
-                    else: df.loc[t2, "Alt Maç Verilen"] += 1
+                        df.loc[t2, "Maç Alınan"] += 1
+                    else: df.loc[t2, "Maç Verilen"] += 1
+                    if df.loc[t2, "Maç Alınan"] >= 2: df.loc[t2, "Seri Gal."] = 1
             except: continue
-    st.table(df)
+            
+    st.table(df.sort_values(by=["Seri Gal.", "Maç Alınan"], ascending=False))
