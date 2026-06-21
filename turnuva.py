@@ -1,44 +1,68 @@
+import streamlit as st
+import pandas as pd
 
-# --- PUAN DURUMU & AVERAJ SEKMESİ ---
+st.set_page_config(page_title="Tenis Turnuva", layout="wide")
+st.title("🎾 Tenis Turnuvası Yönetim Sistemi")
+
+# --- VERİ BAŞLATMA ---
+if 'skorlar' not in st.session_state: st.session_state.skorlar = {}
+if 'takimlar' not in st.session_state:
+    st.session_state.takimlar = {f"Grup {i}": [f"Takım {j+1}" for j in range(4)] for i in range(1, 5)}
+
+# TABS TANIMLAMASI EN BAŞTA OLMALI
+tabs = st.tabs(["Grup 1", "Grup 2", "Grup 3", "Grup 4", "📊 PUAN DURUMU & AVERAJ"])
+
+# --- GRUP SAYFALARI ---
+for i in range(4):
+    grup_id = f"Grup {i+1}"
+    with tabs[i]:
+        st.subheader(f"{grup_id} Ayarları")
+        for t_idx in range(4):
+            st.session_state.takimlar[grup_id][t_idx] = st.text_input(f"{t_idx+1}. Takım", value=st.session_state.takimlar[grup_id][t_idx], key=f"inp_{grup_id}_{t_idx}")
+        
+        t = st.session_state.takimlar[grup_id]
+        program = {"1. Gün": [(t[0], t[3]), (t[1], t[2])], "2. Gün": [(t[0], t[1]), (t[2], t[3])], "3. Gün": [(t[0], t[2]), (t[1], t[3])]}
+        
+        for gun, maclar in program.items():
+            with st.expander(f"📅 {gun} Maçları"):
+                for m1, m2 in maclar:
+                    st.markdown(f"**{m1} vs {m2}**")
+                    for tur in ["Tekler 1", "Tekler 2", "Çiftler"]:
+                        key = f"{grup_id}_{gun}_{m1}_{m2}_{tur}"
+                        cols = st.columns([1,1,1,1,1,1,2])
+                        s = st.session_state.skorlar.get(key, ["","","","","",""])
+                        v = [cols[j].text_input(f"S{j//2+1}{'K' if j%2==0 else 'Y'}", value=s[j], key=f"s{j}_{key}") for j in range(6)]
+                        if cols[6].button("💾 Kaydet", key=f"btn_{key}"):
+                            st.session_state.skorlar[key] = v
+                            st.toast(f"{tur} kaydedildi!")
+
+# --- PUAN DURUMU & AVERAJ ---
 with tabs[4]:
     st.header("🏆 Gruplara Göre Puan Durumu")
     secilen_grup = st.selectbox("Grup Seçiniz:", ["Grup 1", "Grup 2", "Grup 3", "Grup 4"])
     
     if st.button("🔄 Tabloyu Güncelle"):
         takimlar = st.session_state.takimlar[secilen_grup]
-        # Puan tablosunu oluştur
         df = pd.DataFrame(0, index=takimlar, columns=["Galibiyet", "Alınan Set", "Verilen Set", "Alınan Oyun", "Verilen Oyun"])
         
-        # Skorları işle
         for key, vals in st.session_state.skorlar.items():
             if secilen_grup in key:
                 try:
-                    # vals: [S1-K, S1-Y, S2-K, S2-Y, S3-K, S3-Y]
-                    nums = [int(v) if v.isdigit() else 0 for v in vals]
-                    # Basit galibiyet mantığı: Setleri karşılaştır
-                    t1_set = (1 if nums[0]>nums[1] else 0) + (1 if nums[2]>nums[3] else 0) + (1 if nums[4]>nums[5] else 0)
-                    t2_set = (1 if nums[1]>nums[0] else 0) + (1 if nums[3]>nums[2] else 0) + (1 if nums[5]>nums[4] else 0)
+                    n = [int(v) if v.isdigit() else 0 for v in vals]
+                    t1_set = (1 if n[0]>n[1] else 0) + (1 if n[2]>n[3] else 0) + (1 if n[4]>n[5] else 0)
+                    t2_set = (1 if n[1]>n[0] else 0) + (1 if n[3]>n[2] else 0) + (1 if n[5]>n[4] else 0)
                     
-                    # Takım isimlerini key'den bul (Basit bir eşleşme)
                     parts = key.split('_')
                     t1, t2 = parts[2], parts[3]
                     
                     if t1 in df.index:
-                        df.loc[t1, "Alınan Set"] += t1_set
-                        df.loc[t1, "Verilen Set"] += t2_set
-                        df.loc[t1, "Alınan Oyun"] += sum(nums[0::2])
-                        df.loc[t1, "Verilen Oyun"] += sum(nums[1::2])
+                        df.loc[t1, ["Alınan Set", "Verilen Set"]] += [t1_set, t2_set]
+                        df.loc[t1, ["Alınan Oyun", "Verilen Oyun"]] += [sum(n[0::2]), sum(n[1::2])]
                         if t1_set > t2_set: df.loc[t1, "Galibiyet"] += 1
-                        
                     if t2 in df.index:
-                        df.loc[t2, "Alınan Set"] += t2_set
-                        df.loc[t2, "Verilen Set"] += t1_set
-                        df.loc[t2, "Alınan Oyun"] += sum(nums[1::2])
-                        df.loc[t2, "Verilen Oyun"] += sum(nums[0::2])
+                        df.loc[t2, ["Alınan Set", "Verilen Set"]] += [t2_set, t1_set]
+                        df.loc[t2, ["Alınan Oyun", "Verilen Oyun"]] += [sum(n[1::2]), sum(n[0::2])]
                         if t2_set > t1_set: df.loc[t2, "Galibiyet"] += 1
                 except: continue
         
-        # Averajları ekle
-        df["Set Averajı"] = df["Alınan Set"] - df["Verilen Set"]
-        df["Oyun Averajı"] = df["Alınan Oyun"] - df["Verilen Oyun"]
-        st.table(df.sort_values(by=["Galibiyet", "Set Averajı"], ascending=False))
+        st.table(df.sort_values(by="Galibiyet", ascending=False))
