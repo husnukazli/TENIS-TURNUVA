@@ -5,9 +5,9 @@ st.set_page_config(page_title="Tenis Turnuva", layout="wide")
 st.title("🎾 Tenis Turnuvası Yönetim Sistemi")
 
 # --- VERİ BAŞLATMA ---
-if 'takimlar' not in st.session_state:
+if 'skorlar' not in st.session_state:
+    st.session_state.skorlar = {} # Tüm skorlar burada: {key: skor}
     st.session_state.takimlar = {f"Grup {i}": [f"Takım {j+1}" for j in range(4)] for i in range(1, 5)}
-    st.session_state.skor_data = {} # Tüm skorları burada saklayacağız
 
 # --- ANA EKRAN ---
 tabs = st.tabs(["Grup 1", "Grup 2", "Grup 3", "Grup 4", "📊 PUAN DURUMU & AVERAJ"])
@@ -17,42 +17,43 @@ for i in range(4):
     with tabs[i]:
         st.subheader(f"{grup_id} Ayarları")
         for t_idx in range(4):
-            st.session_state.takimlar[grup_id][t_idx] = st.text_input(
-                f"{t_idx+1}. Takım İsmi", value=st.session_state.takimlar[grup_id][t_idx], key=f"inp_{grup_id}_{t_idx}"
-            )
+            st.session_state.takimlar[grup_id][t_idx] = st.text_input(f"{t_idx+1}. Takım", value=st.session_state.takimlar[grup_id][t_idx], key=f"inp_{grup_id}_{t_idx}")
         
         st.divider()
         t = st.session_state.takimlar[grup_id]
-        program = {"1. Gün": [(t[0], t[3], "M1"), (t[1], t[2], "M2")], "2. Gün": [(t[0], t[1], "M3"), (t[2], t[3], "M4")], "3. Gün": [(t[0], t[2], "M5"), (t[1], t[3], "M6")]}
+        program = {"1. Gün": [(t[0], t[3]), (t[1], t[2])], "2. Gün": [(t[0], t[1]), (t[2], t[3])], "3. Gün": [(t[0], t[2]), (t[1], t[3])]}
 
-        for gun, mac_listesi in program.items():
+        for gun, maclar in program.items():
             with st.expander(f"📅 {gun} Maçları"):
-                for m1, m2, m_id in mac_listesi:
+                for m1, m2 in maclar:
                     st.write(f"**{m1} vs {m2}**")
-                    for mac_turu in ["Tekler 1", "Tekler 2", "Çiftler"]:
-                        key_base = f"{grup_id}_{gun}_{m_id}_{mac_turu}"
-                        cols = st.columns(6)
-                        # Veriyi her zaman session_state üzerinden oku
-                        val = lambda s: st.session_state.skor_data.get(f"{key_base}_{s}", "")
-                        
-                        s1w = cols[0].text_input("S1-K", value=val("s1w"), key=f"k_{key_base}_s1w")
-                        s1l = cols[1].text_input("S1-Y", value=val("s1l"), key=f"k_{key_base}_s1l")
-                        s2w = cols[2].text_input("S2-K", value=val("s2w"), key=f"k_{key_base}_s2w")
-                        s2l = cols[3].text_input("S2-Y", value=val("s2l"), key=f"k_{key_base}_s2l")
-                        s3w = cols[4].text_input("S3-K", value=val("s3w"), key=f"k_{key_base}_s3w")
-                        s3l = cols[5].text_input("S3-Y", value=val("s3l"), key=f"k_{key_base}_s3l")
-
-        if st.button(f"{grup_id} Skorlarını Kaydet"):
-            # Tüm inputları skor_data içine aktar
-            for m in range(1, 7):
-                for mt in ["Tekler 1", "Tekler 2", "Çiftler"]:
-                    kb = f"{grup_id}_G{m}_{mt}" # Basitleştirilmiş key mantığı
-                    # Not: Burada tüm key'leri tek tek güncelleme mantığı basitleştirildi
-            st.success("Skorlar hafızaya kaydedildi!")
+                    cols = st.columns(6)
+                    key = f"{grup_id}_{gun}_{m1}_{m2}"
+                    
+                    # Her maçın yanına kendi kaydet butonu
+                    s1 = cols[0].text_input("S1-K", key=f"s1_{key}")
+                    s2 = cols[1].text_input("S1-Y", key=f"s2_{key}")
+                    s3 = cols[2].text_input("S2-K", key=f"s3_{key}")
+                    s4 = cols[3].text_input("S2-Y", key=f"s4_{key}")
+                    s5 = cols[4].text_input("S3-K", key=f"s5_{key}")
+                    s6 = cols[5].text_input("S3-Y", key=f"s6_{key}")
+                    
+                    if cols[5].button("Kaydet", key=f"btn_{key}"):
+                        st.session_state.skorlar[key] = [s1, s2, s3, s4, s5, s6]
+                        st.toast(f"{m1} vs {m2} skorları kaydedildi!")
 
 # --- AVERAJ HESAPLAMA ---
 with tabs[4]:
     st.header("🏆 Averaj Tablosu")
-    if st.button("🔄 Averajları Güncelle / Hesapla"):
-        st.write("Hesaplama motoru çalıştı... (Skor verileriniz tabloya işlendi)")
-        # Buraya skorları toplayan bir döngü eklenecek
+    if st.button("🔄 Hesapla ve Güncelle"):
+        with st.spinner('Skorlar işleniyor...'):
+            data = []
+            for key, skorlar in st.session_state.skorlar.items():
+                grup, gun, m1, m2 = key.split('_')
+                data.append({"Grup": grup, "Maç": f"{m1}-{m2}", "Skor": skorlar})
+            
+            df = pd.DataFrame(data)
+            if not df.empty:
+                st.table(df)
+            else:
+                st.warning("Henüz hiç skor kaydedilmemiş.")
