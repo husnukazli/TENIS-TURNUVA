@@ -7,7 +7,7 @@ st.title("🎾 Tenis Turnuvası Yönetim Sistemi")
 # --- KALICI HAFIZA ---
 if 'skorlar' not in st.session_state: st.session_state.skorlar = {}
 if 'takimlar' not in st.session_state:
-    st.session_state.takimlar = {f"Grup {i}": [f"Takım {j+1}" for j in range(4)} for i in range(1, 5)}
+    st.session_state.takimlar = {f"Grup {i}": [f"Takım {j+1}" for j in range(4)] for i in range(1, 5)}
 
 tabs = st.tabs(["Grup 1", "Grup 2", "Grup 3", "Grup 4", "📊 PUAN DURUMU & YEDEKLEME"])
 
@@ -33,18 +33,17 @@ for i in range(4):
                         for idx in range(6):
                             st.session_state.skorlar[key][idx] = cols[idx].text_input(f"P{idx+1}", value=st.session_state.skorlar[key][idx], key=f"{key}_{idx}")
 
-# --- PUAN DURUMU VE YEDEKLEME (BİRLEŞTİRİLMİŞ BLOK) ---
+# --- PUAN DURUMU VE YEDEKLEME ---
 with tabs[4]:
     st.header("🏆 Puan Durumu ve Veri Yedekleme")
     
-    # YEDEKLEME BUTONLARI
     col1, col2 = st.columns(2)
     with col1:
         uploaded_file = st.file_uploader("Kayıtlı dosyayı yükle", type="csv")
         if uploaded_file is not None:
             df_y = pd.read_csv(uploaded_file, index_col=0)
             st.session_state.skorlar = {idx: list(row) for idx, row in df_y.iterrows()}
-            st.info("Veri yüklendi! Sayfayı yenilemek için yukarıdan veya klavyeden F5 yapınız.")
+            st.info("Veri yüklendi! Lütfen F5 ile sayfayı yenileyin.")
     with col2:
         df_yedek = pd.DataFrame.from_dict(st.session_state.skorlar, orient='index')
         csv = df_yedek.to_csv()
@@ -52,7 +51,6 @@ with tabs[4]:
         
     st.divider()
     
-    # HESAPLAMA VE TABLO
     secilen_grup = st.selectbox("Grup Seçiniz:", ["Grup 1", "Grup 2", "Grup 3", "Grup 4"])
     takimlar = st.session_state.takimlar[secilen_grup]
     df = pd.DataFrame(0, index=takimlar, columns=["Seri Gal.", "Alt Maç Alınan", "Alt Maç Verilen", "Set Alınan", "Set Verilen", "Set Averajı", "Oyun Alınan", "Oyun Verilen", "Oyun Averajı"])
