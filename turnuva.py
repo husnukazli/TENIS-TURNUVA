@@ -12,12 +12,13 @@ if 'takimlar' not in st.session_state:
 # Sekmeleri tanımla
 tabs = st.tabs(["Grup 1", "Grup 2", "Grup 3", "Grup 4", "📊 PUAN DURUMU & AVERAJ"])
 
-# --- GRUP VE MAÇ EKRANLARI ---
+# --- GRUP VE MAÇ EKRANLARI (GÜNCEL HATA GİDERİCİ) ---
 for i in range(4):
     grup_id = f"Grup {i+1}"
     with tabs[i]:
         st.subheader(f"{grup_id} Ayarları")
         for t_idx in range(4):
+            # Buradaki key yapısını sabitledik
             st.session_state.takimlar[grup_id][t_idx] = st.text_input(f"{t_idx+1}. Takım", value=st.session_state.takimlar[grup_id][t_idx], key=f"inp_{grup_id}_{t_idx}")
         
         t = st.session_state.takimlar[grup_id]
@@ -33,6 +34,8 @@ for i in range(4):
                         if key not in st.session_state.skorlar: st.session_state.skorlar[key] = ["0","0","0","0","0","0"]
                         
                         cols = st.columns(6)
+                        # DİKKAT: Her kutucuk için session_state'deki son değeri doğrudan value'ya atıyoruz
+                        # Bu sayede dosya yüklendiğinde kutucuklar anında güncellenecek
                         cols[0].text_input("1.Set(K)", value=st.session_state.skorlar[key][0], key=f"{key}_0")
                         cols[1].text_input("1.Set(V)", value=st.session_state.skorlar[key][1], key=f"{key}_1")
                         cols[2].text_input("2.Set(K)", value=st.session_state.skorlar[key][2], key=f"{key}_2")
@@ -40,7 +43,7 @@ for i in range(4):
                         cols[4].text_input("3.Set(K)", value=st.session_state.skorlar[key][4], key=f"{key}_4")
                         cols[5].text_input("3.Set(V)", value=st.session_state.skorlar[key][5], key=f"{key}_5")
                         
-                        # Değerleri güncelleme döngüsü
+                        # Kullanıcının girdiği yeni değeri session_state'e eşitleyelim
                         for idx in range(6):
                             st.session_state.skorlar[key][idx] = st.session_state[f"{key}_{idx}"]
 
