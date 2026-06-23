@@ -46,7 +46,13 @@ for i in range(4):
 
 # --- PUAN DURUMU ---
 with tabs[4]:
+    # --- İŞTE SİZE ÖZEL BASİT YEDEKLEME ---
+    df_yedek = pd.DataFrame.from_dict({'skorlar': st.session_state.skorlar, 'takimlar': st.session_state.takimlar}, orient='index')
+    csv = df_yedek.to_csv()
+    st.download_button("💾 Tüm Turnuvayı Bilgisayarıma Kaydet", csv, "turnuva_verisi.csv", "text/csv")
+    
     st.header("🏆 Detaylı Puan Durumu")
+    # ... (Geri kalan kodunuz aynı kalıyor) ...
     secilen_grup = st.selectbox("Grup Seçiniz:", ["Grup 1", "Grup 2", "Grup 3", "Grup 4"])
     takimlar = st.session_state.takimlar[secilen_grup]
     cols = ["Seri Gal.", "Alt Maç Alınan", "Alt Maç Verilen", "Set Alınan", "Set Verilen", "Set Averajı", "Oyun Alınan", "Oyun Verilen", "Oyun Averajı"]
