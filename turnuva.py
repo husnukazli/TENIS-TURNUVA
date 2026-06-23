@@ -31,21 +31,20 @@ for i in range(4):
                     for tur in ["Tekler 1", "Tekler 2", "Çiftler"]:
                         st.markdown(f"**{tur}**")
                         key = f"{grup_id}_{gun}_{m1}_{m2}_{tur}"
-                        if key not in st.session_state.skorlar: st.session_state.skorlar[key] = ["0","0","0","0","0","0"]
+                        if key not in st.session_state.skorlar: 
+                            st.session_state.skorlar[key] = ["0","0","0","0","0","0"]
                         
                         cols = st.columns(6)
-                        # DİKKAT: Her kutucuk için session_state'deki son değeri doğrudan value'ya atıyoruz
-                        # Bu sayede dosya yüklendiğinde kutucuklar anında güncellenecek
-                        cols[0].text_input("1.Set(K)", value=st.session_state.skorlar[key][0], key=f"{key}_0")
-                        cols[1].text_input("1.Set(V)", value=st.session_state.skorlar[key][1], key=f"{key}_1")
-                        cols[2].text_input("2.Set(K)", value=st.session_state.skorlar[key][2], key=f"{key}_2")
-                        cols[3].text_input("2.Set(V)", value=st.session_state.skorlar[key][3], key=f"{key}_3")
-                        cols[4].text_input("3.Set(K)", value=st.session_state.skorlar[key][4], key=f"{key}_4")
-                        cols[5].text_input("3.Set(V)", value=st.session_state.skorlar[key][5], key=f"{key}_5")
-                        
-                        # Kullanıcının girdiği yeni değeri session_state'e eşitleyelim
+                        # Her kutucuk için: Girilen değer anında session_state'e kaydedilir
+                        # Ama sadece değer DEĞİŞTİĞİNDE güncellenir
                         for idx in range(6):
-                            st.session_state.skorlar[key][idx] = st.session_state[f"{key}_{idx}"]
+                            label = ["1.S(K)", "1.S(V)", "2.S(K)", "2.S(V)", "3.S(K)", "3.S(V)"][idx]
+                            # Değer değiştiğinde otomatik kaydetmesi için on_change kullanıyoruz
+                            st.session_state.skorlar[key][idx] = cols[idx].text_input(
+                                label, 
+                                value=st.session_state.skorlar[key][idx], 
+                                key=f"{key}_{idx}"
+                            )
 
 # --- PUAN DURUMU ---
 with tabs[4]:
