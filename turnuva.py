@@ -46,12 +46,31 @@ for i in range(4):
 
 # --- PUAN DURUMU ---
 with tabs[4]:
-    # --- İŞTE SİZE ÖZEL BASİT YEDEKLEME ---
-    df_yedek = pd.DataFrame.from_dict({'skorlar': st.session_state.skorlar, 'takimlar': st.session_state.takimlar}, orient='index')
-    csv = df_yedek.to_csv()
-    st.download_button("💾 Tüm Turnuvayı Bilgisayarıma Kaydet", csv, "turnuva_verisi.csv", "text/csv")
+    # --- YEDEKLEME VE GERİ YÜKLEME ---
+    col_a, col_b = st.columns(2)
     
+    # 1. KAYDETME
+    with col_a:
+        df_yedek = pd.DataFrame.from_dict({'skorlar': [st.session_state.skorlar], 'takimlar': [st.session_state.takimlar]})
+        csv = df_yedek.to_csv(index=False)
+        st.download_button("💾 Turnuvayı Kaydet", csv, "turnuva_verisi.csv", "text/csv")
+    
+    # 2. GERİ YÜKLEME
+    with col_b:
+        uploaded_file = st.file_uploader("Kayıtlı dosyayı yükle", type="csv")
+        if uploaded_file is not None:
+            try:
+                df_load = pd.read_csv(uploaded_file)
+                import ast
+                st.session_state.skorlar = ast.literal_eval(df_load['skorlar'][0])
+                st.session_state.takimlar = ast.literal_eval(df_load['takimlar'][0])
+                st.success("Veriler başarıyla yüklendi! F5 yapın.")
+            except:
+                st.error("Dosya okunamadı!")
+
+    st.divider()
     st.header("🏆 Detaylı Puan Durumu")
+    # ... (Puan tablosu kodunuzun geri kalanı burada aynı şekilde duruyor) ...
     # ... (Geri kalan kodunuz aynı kalıyor) ...
     secilen_grup = st.selectbox("Grup Seçiniz:", ["Grup 1", "Grup 2", "Grup 3", "Grup 4"])
     takimlar = st.session_state.takimlar[secilen_grup]
