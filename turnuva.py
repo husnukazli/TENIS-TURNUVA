@@ -72,3 +72,13 @@ with tabs[4]:
             if t1 in df.index: df.loc[t1, "Galibiyet"] += (1 if t1_sets > t2_sets else 0)
             if t2 in df.index: df.loc[t2, "Galibiyet"] += (1 if t2_sets > t1_sets else 0)
     st.table(df)
+    df = pd.DataFrame(0, index=st.session_state.data['takimlar'][secilen], columns=["Galibiyet", "Set Averajı"])
+    for key, vals in st.session_state.data['skorlar'].items():
+        if secilen in key:
+            n = [int(v) if v.isdigit() else 0 for v in vals]
+            t1_sets = (1 if n[0]>n[1] else 0) + (1 if n[2]>n[3] else 0) + (1 if n[4]>n[5] else 0)
+            t2_sets = (1 if n[1]>n[0] else 0) + (1 if n[3]>n[2] else 0) + (1 if n[5]>n[4] else 0)
+            t1, t2 = key.split('_')[2], key.split('_')[3]
+            if t1 in df.index: df.loc[t1, "Galibiyet"] += (1 if t1_sets > t2_sets else 0)
+            if t2 in df.index: df.loc[t2, "Galibiyet"] += (1 if t2_sets > t1_sets else 0)
+    st.table(df)
