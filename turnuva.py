@@ -44,16 +44,18 @@ with tab1:
                 yeni_df[col] = 0
             st.session_state.skor_tablosu = pd.concat([st.session_state.skor_tablosu, yeni_df], ignore_index=True)
             st.success("Eşleşmeler oluşturuldu!")
+            st.rerun() # Veri güncellendiğinde tüm sekmelerin tazelenmesi için zorunlu
         else:
             st.error("Lütfen tam olarak 4 takım girin.")
 
 with tab2:
     st.subheader("Maç Skorlarını Girin")
-    # Sütunları istediğin sıraya dizdik
-    sutun_sirasi = ["Grup", "Gün", "Eşleşme", "Branş", "Takım 1", "Takım 2", "1.Set T1", "1.Set T2", "2.Set T1", "2.Set T2", "3.Set T1", "3.Set T2"]
-    
-    # Skor girişi (Hafızadan doğrudan okuyor ve doğrudan yazıyor, aradaki kopukluk giderildi)
-    st.session_state.skor_tablosu = st.data_editor(st.session_state.skor_tablosu[sutun_sirasi], use_container_width=True)
+    if not st.session_state.skor_tablosu.empty:
+        sutun_sirasi = ["Grup", "Gün", "Eşleşme", "Branş", "Takım 1", "Takım 2", "1.Set T1", "1.Set T2", "2.Set T1", "2.Set T2", "3.Set T1", "3.Set T2"]
+        # Doğrudan st.session_state.skor_tablosu üzerinde işlem yapıyoruz
+        st.session_state.skor_tablosu = st.data_editor(st.session_state.skor_tablosu[sutun_sirasi], use_container_width=True)
+    else:
+        st.info("Henüz oluşturulmuş bir eşleşme yok. 1. Sekmeden grup oluşturun.")
 
 with tab3:
     st.subheader("Otomatik Puan Durumu")
@@ -84,14 +86,12 @@ with tab3:
 with tab4:
     st.subheader("⚙️ Yönetim Paneli")
     if not st.session_state.skor_tablosu.empty:
-        # Takım İsmi Güncelleme
         gruplar = st.session_state.skor_tablosu['Grup'].unique()
         grup_sec = st.selectbox("Düzenlenecek Grubu Seç:", gruplar)
         
-        # O gruba ait takımları bul
-        mask_grup = st.session_state.skor_tablosu['Grup'] == grup_sec
-        grup_df = st.session_state.skor_tablosu[mask_grup]
-        tum_takimlar = pd.concat([grup_df['Takım 1'], grup_df['Takım 2']]).unique()
+        # Takım listesini güvenli bir şekilde filtreleyelim
+        df_grup = st.session_state.skor_tablosu[st.session_state.skor_tablosu['Grup'] == grup_sec]
+        tum_takimlar = sorted(list(set(df_grup['Takım 1'].unique().tolist() + df_grup['Takım 2'].unique().tolist())))
         
         eski_isim = st.selectbox("Değiştirilecek Takım:", tum_takimlar)
         yeni_isim = st.text_input("Yeni İsim:")
