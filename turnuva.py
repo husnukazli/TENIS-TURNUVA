@@ -1,17 +1,26 @@
 import streamlit as st
 import pandas as pd
-import os
+import io
 
-# Sayfa başlığı
+# Sayfa başlığı ve düzeni
 st.set_page_config(page_title="Turnuva Sıralaması", layout="wide")
 st.title("🎾 Turnuva Sıralama Sistemi")
+st.write("Herhangi bir dosya yüklemesi yapılmasına gerek kalmadan, veriler sistemden otomatik olarak listelenmektedir.")
 
-# Otomatik olarak aranacak dosya adı
-VARSAYILAN_DOSYA = "Turnuva_Dinamik_Formullu.xlsx - Skor Giriş Ekranı.csv"
+# --- TURNUVA SKOR VERİLERİ (Doğrudan Kodun İçinde) ---
+# Buradaki metin alanına dilediğiniz kadar maç skoru satırı ekleyebilirsiniz.
+TURNUVA_SKOR_DATA = """Grup,Gün,Eşleşme,Branş,Takım 1,Takım 2,1.Set (T1),1.Set (T2),2.Set (T1),2.Set (T2),3.Set (T1),3.Set (T2),T1 Kazanılan Set,T2 Kazanılan Set,T1 Kazanılan Maç,T2 Kazanılan Maç,T1 Kazanılan Oyun,T2 Kazanılan Oyun,Tie Kazananı (Galibiyet)
+ERKEK A GRUBU,1. Gün,1 ve 4,1. Tekler,ATAK PRO SPOR KULÜBÜ  E,NEW GEN SPOR KULÜBÜ  E,6,3,6,1,,,2,0,1,0,12,4,ATAK PRO SPOR KULÜBÜ  E
+ERKEK A GRUBU,1. Gün,1 ve 4,2. Tekler,ATAK PRO SPOR KULÜBÜ  E,NEW GEN SPOR KULÜBÜ  E,6,1,6,0,,,2,0,1,0,12,1,ATAK PRO SPOR KULÜBÜ  E
+ERKEK A GRUBU,1. Gün,1 ve 4,Çiftler,ATAK PRO SPOR KULÜBÜ  E,NEW GEN SPOR KULÜBÜ  E,6,0,6,2,,,2,0,1,0,12,2,ATAK PRO SPOR KULÜBÜ  E
+KADIN B GRUBU,2. Gün,2 ve 4,1. Tekler,ORTADOĞU TEKNİK ÜNİVERSİTESİ SPOR KULÜBÜ,İNCEK TENİS SPOR KULÜBÜ,6,0,6,0,,,2,0,1,0,12,0,ORTADOĞU TEKNİK ÜNİVERSİTESİ SPOR KULÜBÜ
+KADIN B GRUBU,2. Gün,2 ve 4,2. Tekler,ORTADOĞU TEKNİK ÜNİVERSİTESİ SPOR KULÜBÜ,İNCEK TENİS SPOR KULÜBÜ,6,0,6,0,,,2,0,1,0,12,0,ORTADOĞU TEKNİK ÜNİVERSİTESİ SPOR KULÜBÜ
+KADIN B GRUBU,2. Gün,2 ve 4,Çiftler,ORTADOĞU TEKNİK ÜNİVERSİTESİ SPOR KULÜBÜ,İNCEK TENİS SPOR KULÜBÜ,6,0,6,0,,,2,0,1,0,12,0,ORTADOĞU TEKNİK ÜNİVERSİTESİ SPOR KULÜBÜ
+"""
 
-def turnuva_siralamasi_hesapla(skor_dosyasi):
-    # Veriyi oku (Eğer yüklenen dosyaysa doğrudan okunur, yolsa string olarak okunur)
-    df = pd.read_csv(skor_dosyasi)
+def turnuva_siralamasi_hesapla(veri_metni):
+    # Kod içindeki metni tablo verisine (Dataframe) dönüştürüyoruz
+    df = pd.read_csv(io.StringIO(veri_metni))
     df = df.dropna(subset=['Takım 1', 'Takım 2'])
 
     # Takım 1 İstatistikleri
@@ -30,12 +39,12 @@ def turnuva_siralamasi_hesapla(skor_dosyasi):
     all_stats = pd.concat([t1_stats, t2_stats], ignore_index=True)
     siralama = all_stats.groupby(['Grup', 'Takım Adı']).sum().reset_index()
 
-    # Averajlar
+    # Averaj Hesapları
     siralama['Maç Averajı'] = siralama['Aldığı Maç'] - siralama['Verdiği Maç']
     siralama['Set Averajı'] = siralama['Aldığı Set'] - siralama['Verdiği Set']
     siralama['Oyun Averajı'] = siralama['Aldığı Oyun'] - siralama['Verdiği Oyun']
 
-    # Sıralama Önceliği
+    # Sıralama Kriterleri (Galibiyet -> Maç Averajı -> Set Averajı -> Oyun Averajı)
     siralama = siralama.sort_values(
         by=['Grup', 'Galibiyet', 'Maç Averajı', 'Set Averajı', 'Oyun Averajı'], 
         ascending=[True, False, False, False, False]
@@ -45,41 +54,21 @@ def turnuva_siralamasi_hesapla(skor_dosyasi):
                          'Aldığı Set', 'Verdiği Set', 'Set Averajı', 'Aldığı Oyun', 'Verdiği Oyun', 'Oyun Averajı']]
     return siralama
 
-# --- DOSYA KONTROL VE AKIŞ MANTIĞI ---
-hedef_dosya = None
-
-if os.path.exists(VARSAYILAN_DOSYA):
-    hedef_dosya = VARSAYILAN_DOSYA
-    st.info(f"🔄 '{VARSAYILAN_DOSYA}' dosyası GitHub'dan otomatik olarak yüklendi.")
-else:
-    st.warning(f"⚠️ '{VARSAYILAN_DOSYA}' dosyası GitHub deponuzda bulunamadı.")
-    st.write("Sıralamayı görebilmek için dosyayı aşağıdan manuel olarak yükleyebilir veya GitHub'daki dosya adını kontrol edebilirsiniz.")
+# --- HESAPLAMA VE EKRANA YAZDIRMA ---
+try:
+    sonuc_df = turnuva_siralamasi_hesapla(TURNUVA_SKOR_DATA)
+    st.success("✅ Sıralama tablosu başarıyla yüklendi!")
     
-    # Yedek Plan: Manuel yükleme kutusu
-    hedef_dosya = st.file_uploader("Skor Giriş Ekranı CSV dosyasını buraya sürükleyin", type=['csv'])
+    # Canlı Tablo Gösterimi
+    st.dataframe(sonuc_df, use_container_width=True)
     
-    # Hata tespiti için mevcut klasördeki dosyaları listeleme (Sadece geliştiriciye yardımcı olmak için)
-    with st.expander("📂 GitHub Deponuzdaki Mevcut Dosyaları Görün (İsim Kontrolü)"):
-        mevcut_dosyalar = [f for f in os.listdir('.') if os.path.isfile(f)]
-        st.write("Şu an klasörde olan dosyalar:")
-        st.code("\n".join(mevcut_dosyalar))
-
-# --- HESAPLAMA VE GÖSTERİM ---
-if hedef_dosya is not None:
-    try:
-        sonuc_df = turnuva_siralamasi_hesapla(hedef_dosya)
-        st.success("Sıralama tablosu başarıyla oluşturuldu!")
-        
-        # Tabloyu göster
-        st.dataframe(sonuc_df, use_container_width=True)
-        
-        # İndirme Butonu
-        csv_veri = sonuc_df.to_csv(index=False).encode('utf-8')
-        st.download_button(
-            label="Sonuçları İndir (CSV)",
-            data=csv_veri,
-            file_name='Guncel_Siralama.csv',
-            mime='text/csv',
-        )
-    except Exception as e:
-        st.error(f"Veriler işlenirken bir hata oluştu. Hata detayı: {e}")
+    # Excel/CSV olarak indirmek isteyenler için kolaylık butonu
+    csv_veri = sonuc_df.to_csv(index=False).encode('utf-8')
+    st.download_button(
+        label="Sıralama Sonuçlarını İndir (CSV)",
+        data=csv_veri,
+        file_name='Turnuva_Siralama_Raporu.csv',
+        mime='text/csv',
+    )
+except Exception as e:
+    st.error(f"Sistem çalışırken bir sorunla karşılaştı: {e}")
