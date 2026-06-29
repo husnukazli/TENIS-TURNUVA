@@ -36,7 +36,7 @@ with st.sidebar:
         st.success("Dosya yüklendi!")
 
 # --- 3. SEKMELER ---
-tab1, tab2, tab3 = st.tabs(["👥 1. Grup ve Eşleşme Ayarları", "✍️ 2. Detaylı Skor Girişi", "🏆 3. Canlı Puan Durumu"])
+tab1, tab2, tab3, tab4 = st.tabs(["👥 1. Grup Ayarları", "✍️ 2. Skor Girişi", "🏆 3. Puan Durumu", "⚙️ 4. Yönetim"])
 
 with tab1:
     st.subheader("Grup Takımlarını Seç ve Eşleşmeleri Oluştur")
@@ -59,33 +59,31 @@ with tab1:
 
 with tab2:
     st.subheader("Maç Skorlarını Set Set Girin")
-    # GRUP SEÇİCİ EKLENDİ
     gruplar = ["Hepsi"] + list(st.session_state.skor_tablosu['Grup'].unique())
-    secilen_grup = st.selectbox("Görüntülenecek Grubu Seç:", gruplar)
+    secilen_grup = st.selectbox("Filtrele:", gruplar)
     
-    df_goster = st.session_state.skor_tablosu if secilen_grup == "Hepsi" else st.session_state.skor_tablosu[st.session_state.skor_tablosu['Grup'] == secilen_grup]
-    st.session_state.skor_tablosu = st.data_editor(st.session_state.skor_tablosu, use_container_width=True) # Düzenleme tüm veri üzerinde yapılır
-    
+    if secilen_grup == "Hepsi":
+        st.session_state.skor_tablosu = st.data_editor(st.session_state.skor_tablosu, use_container_width=True)
+    else:
+        # Filtreli düzenleme
+        mask = st.session_state.skor_tablosu['Grup'] == secilen_grup
+        temp_df = st.session_state.skor_tablosu[mask]
+        edited_df = st.data_editor(temp_df, use_container_width=True)
+        st.session_state.skor_tablosu.loc[mask] = edited_df
+
     csv = st.session_state.skor_tablosu.to_csv(index=False).encode('utf-8')
     st.download_button("💾 Verileri Kaydet (CSV)", data=csv, file_name="turnuva_kayit.csv", mime="text/csv")
 
 with tab3:
-    st.subheader("Otomatik Puan Durumu (Grup Bazlı)")
+    st.subheader("Otomatik Puan Durumu")
     if not st.session_state.skor_tablosu.empty:
         df = st.session_state.skor_tablosu.copy()
-        
-        # --- İSTATİSTİK HESAPLAMA MOTORU ---
         df['T1_Set_Skor'] = (df['1.Set T1'] > df['1.Set T2']).astype(int) + (df['2.Set T1'] > df['2.Set T2']).astype(int) + (df['3.Set T1'] > df['3.Set T2']).astype(int)
         df['T2_Set_Skor'] = (df['1.Set T2'] > df['1.Set T1']).astype(int) + (df['2.Set T2'] > df['2.Set T1']).astype(int) + (df['3.Set T2'] > df['3.Set T1']).astype(int)
-        
         df['T1_Match_Win'] = (df['T1_Set_Skor'] > df['T2_Set_Skor']).astype(int)
         df['T2_Match_Win'] = (df['T2_Set_Skor'] > df['T1_Set_Skor']).astype(int)
         
-        seriler = df.groupby(['Grup', 'Gün', 'Eşleşme', 'Takım 1', 'Takım 2']).agg({
-            'T1_Match_Win': 'sum', 'T2_Match_Win': 'sum',
-            'T1_Set_Skor': 'sum', 'T2_Set_Skor': 'sum'
-        }).reset_index()
-        
+        seriler = df.groupby(['Grup', 'Gün', 'Eşleşme', 'Takım 1', 'Takım 2']).agg({'T1_Match_Win': 'sum', 'T2_Match_Win': 'sum', 'T1_Set_Skor': 'sum', 'T2_Set_Skor': 'sum'}).reset_index()
         seriler['T1_Win'] = (seriler['T1_Match_Win'] >= 2).astype(int)
         seriler['T2_Win'] = (seriler['T2_Match_Win'] >= 2).astype(int)
         
@@ -98,11 +96,29 @@ with tab3:
         tum_stats['Maç Av.'] = tum_stats['Aldığı Maç'] - tum_stats['Verdiği Maç']
         tum_stats['Set Av.'] = tum_stats['Aldığı Set'] - tum_stats['Verdiği Set']
         
-        # --- HER GRUBU AYRI TABLO OLARAK YAZDIR ---
         for grup in tum_stats['Grup'].unique():
-            st.markdown(f"### 🏆 {grup} Sıralaması")
+            st.markdown(f"### 🏆 {grup} Puan Durumu")
             grup_df = tum_stats[tum_stats['Grup'] == grup].sort_values(by=['Galibiyet', 'Maç Av.', 'Set Av.'], ascending=False)
             st.dataframe(grup_df.drop(columns=['Grup']), use_container_width=True)
             st.divider()
+
+with tab4:
+    st.subheader("⚙️ Grup Yönetimi ve Sıfırlama")
+    
+    # Grup Silme
+    mevcut_gruplar = list(st.session_state.skor_tablosu['Grup'].unique())
+    if mevcut_gruplar:
+        silinecek_grup = st.selectbox("Silmek İstediğiniz Grubu Seçin:", mevcut_gruplar)
+        if st.button("❌ Bu Grubu Sil"):
+            st.session_state.skor_tablosu = st.session_state.skor_tablosu[st.session_state.skor_tablosu['Grup'] != silinecek_grup]
+            st.rerun()
     else:
-        st.warning("Veri bekleniyor.")
+        st.info("Henüz oluşturulmuş bir grup yok.")
+    
+    st.divider()
+    
+    # Tüm Turnuvayı Sıfırlama
+    st.warning("⚠️ DİKKAT: Tüm verileri silip sistemi boşaltmak üzeresiniz.")
+    if st.button("🚨 TÜM TURNUVAYI SIFIRLA"):
+        st.session_state.skor_tablosu = pd.DataFrame(columns=["Grup", "Gün", "Eşleşme", "Branş", "Takım 1", "Takım 2", "1.Set T1", "1.Set T2", "2.Set T1", "2.Set T2", "3.Set T1", "3.Set T2"])
+        st.rerun()
