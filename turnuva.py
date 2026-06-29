@@ -29,7 +29,7 @@ if 'skor_tablosu' not in st.session_state:
     st.session_state.skor_tablosu = pd.DataFrame(columns=["Grup", "Gün", "Eşleşme", "Branş", "Takım 1", "Takım 2", "1.Set T1", "1.Set T2", "2.Set T1", "2.Set T2", "3.Set T1", "3.Set T2"])
 
 # --- 3. SEKMELER ---
-tab1, tab2, tab3, tab4 = st.tabs(["👥 1. Grup ve Eşleşme", "✍️ 2. Skor Girişi", "🏆 3. Puan Durumu", "⚙️ 4. Yönetim"])
+tab1, tab2, tab3, tab4 = st.tabs(["👥 1. Grup Ayarları", "✍️ 2. Skor Girişi", "🏆 3. Puan Durumu", "⚙️ 4. Yönetim"])
 
 with tab1:
     st.subheader("Grup Takımlarını Seç ve Eşleşmeleri Oluştur")
@@ -49,19 +49,11 @@ with tab1:
 
 with tab2:
     st.subheader("Maç Skorlarını Girin")
-    # Filtreleme burada sadece görüntüleme için
-    secilen_grup = st.selectbox("Grup Filtrele:", ["Tümü"] + list(st.session_state.skor_tablosu['Grup'].unique()))
+    # Sütunları istediğin sıraya dizdik
+    sutun_sirasi = ["Grup", "Gün", "Eşleşme", "Branş", "Takım 1", "Takım 2", "1.Set T1", "1.Set T2", "2.Set T1", "2.Set T2", "3.Set T1", "3.Set T2"]
     
-    df_temp = st.session_state.skor_tablosu if secilen_grup == "Tümü" else st.session_state.skor_tablosu[st.session_state.skor_tablosu['Grup'] == secilen_grup]
-    
-    # Skor girişi
-    edited_df = st.data_editor(df_temp, use_container_width=True)
-    
-    # Değişiklikleri ana hafızaya geri işle
-    if secilen_grup == "Tümü":
-        st.session_state.skor_tablosu = edited_df
-    else:
-        st.session_state.skor_tablosu.update(edited_df)
+    # Skor girişi (Hafızadan doğrudan okuyor ve doğrudan yazıyor, aradaki kopukluk giderildi)
+    st.session_state.skor_tablosu = st.data_editor(st.session_state.skor_tablosu[sutun_sirasi], use_container_width=True)
 
 with tab3:
     st.subheader("Otomatik Puan Durumu")
@@ -91,19 +83,34 @@ with tab3:
 
 with tab4:
     st.subheader("⚙️ Yönetim Paneli")
-    # Takım İsmi Güncelleme
-    grup_sec = st.selectbox("Düzenlenecek Grubu Seç:", st.session_state.skor_tablosu['Grup'].unique())
-    if grup_sec:
-        takimlar = list(pd.concat([st.session_state.skor_tablosu[st.session_state.skor_tablosu['Grup']==grup_sec]['Takım 1'], 
-                                   st.session_state.skor_tablosu[st.session_state.skor_tablosu['Grup']==grup_sec]['Takım 2']]).unique())
-        eski_isim = st.selectbox("Değiştirilecek Takım:", takimlar)
+    if not st.session_state.skor_tablosu.empty:
+        # Takım İsmi Güncelleme
+        gruplar = st.session_state.skor_tablosu['Grup'].unique()
+        grup_sec = st.selectbox("Düzenlenecek Grubu Seç:", gruplar)
+        
+        # O gruba ait takımları bul
+        mask_grup = st.session_state.skor_tablosu['Grup'] == grup_sec
+        grup_df = st.session_state.skor_tablosu[mask_grup]
+        tum_takimlar = pd.concat([grup_df['Takım 1'], grup_df['Takım 2']]).unique()
+        
+        eski_isim = st.selectbox("Değiştirilecek Takım:", tum_takimlar)
         yeni_isim = st.text_input("Yeni İsim:")
+        
         if st.button("Takımı Güncelle"):
             mask1 = (st.session_state.skor_tablosu['Grup'] == grup_sec) & (st.session_state.skor_tablosu['Takım 1'] == eski_isim)
             mask2 = (st.session_state.skor_tablosu['Grup'] == grup_sec) & (st.session_state.skor_tablosu['Takım 2'] == eski_isim)
             st.session_state.skor_tablosu.loc[mask1, 'Takım 1'] = yeni_isim
             st.session_state.skor_tablosu.loc[mask2, 'Takım 2'] = yeni_isim
             st.rerun()
+            
+        st.divider()
+        st.subheader("Grup Silme")
+        silinecek_grup = st.selectbox("Silinecek Grup:", gruplar)
+        if st.button("❌ Bu Grubu Tamamen Sil"):
+            st.session_state.skor_tablosu = st.session_state.skor_tablosu[st.session_state.skor_tablosu['Grup'] != silinecek_grup]
+            st.rerun()
+    else:
+        st.info("Henüz grup yok.")
 
     st.divider()
     if st.button("🚨 TÜM VERİLERİ SIFIRLA"):
