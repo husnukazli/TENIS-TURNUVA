@@ -28,24 +28,14 @@ def eslesmeleri_olustur(grup_adi, takimlar):
 if 'skor_tablosu' not in st.session_state:
     st.session_state.skor_tablosu = pd.DataFrame(columns=["Grup", "Gün", "Eşleşme", "Branş", "Takım 1", "Takım 2", "1.Set T1", "1.Set T2", "2.Set T1", "2.Set T2", "3.Set T1", "3.Set T2"])
 
-with st.sidebar:
-    st.header("Dosya İşlemleri")
-    uploaded_file = st.file_uploader("Kayıtlı CSV dosyasını geri yükle:", type="csv")
-    if uploaded_file is not None:
-        st.session_state.skor_tablosu = pd.read_csv(uploaded_file)
-        st.success("Dosya yüklendi!")
-
 # --- 3. SEKMELER ---
-tab1, tab2, tab3, tab4 = st.tabs(["👥 1. Grup Ayarları", "✍️ 2. Skor Girişi", "🏆 3. Puan Durumu", "⚙️ 4. Yönetim"])
+tab1, tab2, tab3, tab4 = st.tabs(["👥 1. Grup ve Eşleşme", "✍️ 2. Skor Girişi", "🏆 3. Puan Durumu", "⚙️ 4. Yönetim"])
 
 with tab1:
     st.subheader("Grup Takımlarını Seç ve Eşleşmeleri Oluştur")
-    col1, col2 = st.columns(2)
-    with col1:
-        grup_adi = st.text_input("Grup Adı (Örn: ERKEK A)")
-        takim_listesi = st.text_area("Takımları Alt Alta Yaz (4 Takım Olmalı)")
-    
-    if st.button("🚀 Eşleşmeleri ve Programı Otomatik Oluştur"):
+    grup_adi = st.text_input("Grup Adı")
+    takim_listesi = st.text_area("Takımları Alt Alta Yaz (4 Takım Olmalı)")
+    if st.button("🚀 Eşleşmeleri Oluştur"):
         takimlar = [t.strip() for t in takim_listesi.split('\n') if t.strip()]
         if len(takimlar) == 4:
             yeni_maclar = eslesmeleri_olustur(grup_adi, takimlar)
@@ -58,21 +48,20 @@ with tab1:
             st.error("Lütfen tam olarak 4 takım girin.")
 
 with tab2:
-    st.subheader("Maç Skorlarını Set Set Girin")
-    gruplar = ["Hepsi"] + list(st.session_state.skor_tablosu['Grup'].unique())
-    secilen_grup = st.selectbox("Filtrele:", gruplar)
+    st.subheader("Maç Skorlarını Girin")
+    # Filtreleme burada sadece görüntüleme için
+    secilen_grup = st.selectbox("Grup Filtrele:", ["Tümü"] + list(st.session_state.skor_tablosu['Grup'].unique()))
     
-    if secilen_grup == "Hepsi":
-        st.session_state.skor_tablosu = st.data_editor(st.session_state.skor_tablosu, use_container_width=True)
+    df_temp = st.session_state.skor_tablosu if secilen_grup == "Tümü" else st.session_state.skor_tablosu[st.session_state.skor_tablosu['Grup'] == secilen_grup]
+    
+    # Skor girişi
+    edited_df = st.data_editor(df_temp, use_container_width=True)
+    
+    # Değişiklikleri ana hafızaya geri işle
+    if secilen_grup == "Tümü":
+        st.session_state.skor_tablosu = edited_df
     else:
-        # Filtreli düzenleme
-        mask = st.session_state.skor_tablosu['Grup'] == secilen_grup
-        temp_df = st.session_state.skor_tablosu[mask]
-        edited_df = st.data_editor(temp_df, use_container_width=True)
-        st.session_state.skor_tablosu.loc[mask] = edited_df
-
-    csv = st.session_state.skor_tablosu.to_csv(index=False).encode('utf-8')
-    st.download_button("💾 Verileri Kaydet (CSV)", data=csv, file_name="turnuva_kayit.csv", mime="text/csv")
+        st.session_state.skor_tablosu.update(edited_df)
 
 with tab3:
     st.subheader("Otomatik Puan Durumu")
@@ -98,27 +87,25 @@ with tab3:
         
         for grup in tum_stats['Grup'].unique():
             st.markdown(f"### 🏆 {grup} Puan Durumu")
-            grup_df = tum_stats[tum_stats['Grup'] == grup].sort_values(by=['Galibiyet', 'Maç Av.', 'Set Av.'], ascending=False)
-            st.dataframe(grup_df.drop(columns=['Grup']), use_container_width=True)
-            st.divider()
+            st.dataframe(tum_stats[tum_stats['Grup'] == grup].drop(columns=['Grup']).sort_values(by=['Galibiyet', 'Maç Av.'], ascending=False), use_container_width=True)
 
 with tab4:
-    st.subheader("⚙️ Grup Yönetimi ve Sıfırlama")
-    
-    # Grup Silme
-    mevcut_gruplar = list(st.session_state.skor_tablosu['Grup'].unique())
-    if mevcut_gruplar:
-        silinecek_grup = st.selectbox("Silmek İstediğiniz Grubu Seçin:", mevcut_gruplar)
-        if st.button("❌ Bu Grubu Sil"):
-            st.session_state.skor_tablosu = st.session_state.skor_tablosu[st.session_state.skor_tablosu['Grup'] != silinecek_grup]
+    st.subheader("⚙️ Yönetim Paneli")
+    # Takım İsmi Güncelleme
+    grup_sec = st.selectbox("Düzenlenecek Grubu Seç:", st.session_state.skor_tablosu['Grup'].unique())
+    if grup_sec:
+        takimlar = list(pd.concat([st.session_state.skor_tablosu[st.session_state.skor_tablosu['Grup']==grup_sec]['Takım 1'], 
+                                   st.session_state.skor_tablosu[st.session_state.skor_tablosu['Grup']==grup_sec]['Takım 2']]).unique())
+        eski_isim = st.selectbox("Değiştirilecek Takım:", takimlar)
+        yeni_isim = st.text_input("Yeni İsim:")
+        if st.button("Takımı Güncelle"):
+            mask1 = (st.session_state.skor_tablosu['Grup'] == grup_sec) & (st.session_state.skor_tablosu['Takım 1'] == eski_isim)
+            mask2 = (st.session_state.skor_tablosu['Grup'] == grup_sec) & (st.session_state.skor_tablosu['Takım 2'] == eski_isim)
+            st.session_state.skor_tablosu.loc[mask1, 'Takım 1'] = yeni_isim
+            st.session_state.skor_tablosu.loc[mask2, 'Takım 2'] = yeni_isim
             st.rerun()
-    else:
-        st.info("Henüz oluşturulmuş bir grup yok.")
-    
+
     st.divider()
-    
-    # Tüm Turnuvayı Sıfırlama
-    st.warning("⚠️ DİKKAT: Tüm verileri silip sistemi boşaltmak üzeresiniz.")
-    if st.button("🚨 TÜM TURNUVAYI SIFIRLA"):
+    if st.button("🚨 TÜM VERİLERİ SIFIRLA"):
         st.session_state.skor_tablosu = pd.DataFrame(columns=["Grup", "Gün", "Eşleşme", "Branş", "Takım 1", "Takım 2", "1.Set T1", "1.Set T2", "2.Set T1", "2.Set T2", "3.Set T1", "3.Set T2"])
         st.rerun()
