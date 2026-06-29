@@ -1,177 +1,86 @@
 import streamlit as st
 import pandas as pd
 
-# Sayfa Genişlik Ayarı (En üstte olmalı)
-st.set_page_config(page_title="Tenis Turnuva Yönetimi", layout="wide")
-st.title("🎾 Profesyonel Tenis Turnuvası Yönetim Sistemi")
+st.set_page_config(page_title="Tenis Turnuva Otomasyonu", layout="wide")
+st.title("🎾 Profesyonel Tenis Turnuva Yönetim Sistemi")
 
-# --- 1. SÜTUN İSİMLERİNİ SABİTLEYELİM (HATA ÖNLEME) ---
-GRUP_COL = "Grup"
-GUN_COL = "Gün"
-ESLESME_COL = "Eşleşme"
-BRANS_COL = "Branş"
-TAKIM1_COL = "Takım 1"
-TAKIM2_COL = "Takım 2"
-T1_MAC = "T1 Maç"
-T2_MAC = "T2 Maç"
-T1_SET = "T1 Set"
-T2_SET = "T2 Set"
-T1_OYUN = "T1 Oyun"
-T2_OYUN = "T2 Oyun"
-TIE_KAZANANI = "Tie Kazananı (Galibiyet)"
-
-# --- 2. HAFIZA (SESSION STATE) İLK KURULUMU ---
-if 'havuz_listesi' not in st.session_state:
-    st.session_state.havuz_listesi = [
-        "ATAK PRO SPOR KULÜBÜ  E", "İNCEK TENİS SPOR KULÜBÜ  E", 
-        "ORTADOĞU TEKNİK ÜNİVERSİTESİ SPOR KULÜBÜ  E", "TOPSPİN TENİS SPOR KULÜBÜ  E",
-        "TOPSPİN KONUTKENT SPOR KULÜBÜ  E", "SETPOİNT TENİS SPOR KULÜBÜ  E",
-        "EFE GÜRAY EĞİTİM VE SPOR VAKFI SPOR KULÜBÜ  E", "NEW GEN SPOR KULÜBÜ  E",
-        "ATAK PRO SPOR KULÜBÜ", "İNCEK TENİS SPOR KULÜBÜ", 
-        "ORTADOĞU TEKNİK ÜNİVERSİTESİ SPOR KULÜBÜ", "TOPSPİN TENİS SPOR KULÜBÜ",
-        "TOPSPİN KONUTKENT SPOR KULÜBÜ", "SETPOİNT TENİS SPOR KULÜBÜ", "NEW GEN SPOR KULÜBÜ"
+# --- 1. OTOMASYON MOTORU: EŞLEŞME OLUŞTURUCU ---
+def eslesmeleri_olustur(grup_adi, takimlar):
+    # Basit 4'lü grup için round-robin eşleşme mantığı
+    # takımlar listesi: [1.Takım, 2.Takım, 3.Takım, 4.Takım]
+    if len(takimlar) < 4: return []
+    
+    # Eşleşme düzeni: 1-4, 2-3 | 1-3, 2-4 | 1-2, 3-4
+    program = [
+        {"Gün": "1. Gün", "Eşleşme": "1 ve 4", "T1": takimlar[0], "T2": takimlar[3]},
+        {"Gün": "1. Gün", "Eşleşme": "2 ve 3", "T1": takimlar[1], "T2": takimlar[2]},
+        {"Gün": "2. Gün", "Eşleşme": "1 ve 3", "T1": takimlar[0], "T2": takimlar[2]},
+        {"Gün": "2. Gün", "Eşleşme": "2 ve 4", "T1": takimlar[1], "T2": takimlar[3]},
+        {"Gün": "3. Gün", "Eşleşme": "1 ve 2", "T1": takimlar[0], "T2": takimlar[1]},
+        {"Gün": "3. Gün", "Eşleşme": "3 ve 4", "T1": takimlar[2], "T2": takimlar[3]},
     ]
+    for m in program: m["Grup"] = grup_adi
+    return program
 
-if 'grup_tablosu' not in st.session_state:
-    st.session_state.grup_tablosu = pd.DataFrame([
-        {"Grup": "ERKEK A GRUBU", "Grup Sırası": "1. Takım", "Seçilen Takım": "ATAK PRO SPOR KULÜBÜ  E"},
-        {"Grup": "ERKEK A GRUBU", "Grup Sırası": "2. Takım", "Seçilen Takım": "TOPSPİN TENİS SPOR KULÜBÜ  E"},
-        {"Grup": "ERKEK A GRUBU", "Grup Sırası": "3. Takım", "Seçilen Takım": "TOPSPİN KONUTKENT SPOR KULÜBÜ  E"},
-        {"Grup": "ERKEK A GRUBU", "Grup Sırası": "4. Takım", "Seçilen Takım": "NEW GEN SPOR KULÜBÜ  E"},
-        {"Grup": "ERKEK B GRUBU", "Grup Sırası": "1. Takım", "Seçilen Takım": "İNCEK TENİS SPOR KULÜBÜ  E"},
-        {"Grup": "ERKEK B GRUBU", "Grup Sırası": "2. Takım", "Seçilen Takım": "ORTADOĞU TEKNİK ÜNİVERSİTESİ SPOR KULÜBÜ  E"},
-        {"Grup": "ERKEK B GRUBU", "Grup Sırası": "3. Takım", "Seçilen Takım": "SETPOİNT TENİS SPOR KULÜBÜ  E"},
-        {"Grup": "ERKEK B GRUBU", "Grup Sırası": "4. Takım", "Seçilen Takım": "EFE GÜRAY EĞİTİM VE SPOR VAKFI SPOR KULÜBÜ  E"},
-    ])
-
+# --- 2. HAFIZA ---
 if 'skor_tablosu' not in st.session_state:
-    st.session_state.skor_tablosu = pd.DataFrame([
-        {GRUP_COL: "ERKEK A GRUBU", GUN_COL: "1. Gün", ESLESME_COL: "1 ve 4", BRANS_COL: "1. Tekler", TAKIM1_COL: "ATAK PRO SPOR KULÜBÜ  E", TAKIM2_COL: "NEW GEN SPOR KULÜBÜ  E", T1_MAC: 1, T2_MAC: 0, T1_SET: 2, T2_SET: 0, T1_OYUN: 12, T2_OYUN: 4, TIE_KAZANANI: "ATAK PRO SPOR KULÜBÜ  E"},
-        {GRUP_COL: "ERKEK A GRUBU", GUN_COL: "1. Gün", ESLESME_COL: "1 ve 4", BRANS_COL: "2. Tekler", TAKIM1_COL: "ATAK PRO SPOR KULÜBÜ  E", TAKIM2_COL: "NEW GEN SPOR KULÜBÜ  E", T1_MAC: 1, T2_MAC: 0, T1_SET: 2, T2_SET: 0, T1_OYUN: 12, T2_OYUN: 1, TIE_KAZANANI: "ATAK PRO SPOR KULÜBÜ  E"},
-        {GRUP_COL: "ERKEK B GRUBU", GUN_COL: "2. Gün", ESLESME_COL: "2 ve 4", BRANS_COL: "1. Tekler", TAKIM1_COL: "ORTADOĞU TEKNİK ÜNİVERSİTESİ SPOR KULÜBÜ  E", TAKIM2_COL: "EFE GÜRAY EĞİTİM VE SPOR VAKFI SPOR KULÜBÜ  E", T1_MAC: 1, T2_MAC: 0, T1_SET: 2, T2_SET: 0, T1_OYUN: 10, T2_OYUN: 2, TIE_KAZANANI: "ORTADOĞU TEKNİK ÜNİVERSİTESİ SPOR KULÜBÜ  E"}
-    ])
+    st.session_state.skor_tablosu = pd.DataFrame(columns=["Grup", "Gün", "Eşleşme", "Takım 1", "Takım 2", "1.Set T1", "1.Set T2", "2.Set T1", "2.Set T2", "3.Set T1", "3.Set T2"])
 
-# --- 3. SEKMELERİN OLUŞTURULMASI ---
-sekme_havuz, sekme_gruplar, sekme_skor, sekme_siralama = st.tabs([
-    "🚀 1. Takım Havuzu Girişi", 
-    "👥 2. Grup Atamaları", 
-    "✍️ 3. Skor Giriş Ekranı", 
-    "🏆 4. Grup Sıralamaları"
-])
+# --- 3. SEKMELER ---
+tab1, tab2, tab3 = st.tabs(["👥 Grup ve Eşleşme Ayarları", "✍️ Detaylı Skor Girişi", "🏆 Canlı Puan Durumu"])
 
-# --- SEKME 1: TAKIM HAVUZU GİRİŞİ ---
-with sekme_havuz:
-    st.subheader("Turnuvaya Katılabilecek Tüm Takımların Listesi")
-    st.info("💡 Yeni takımları en alta ekleyebilir veya silebilirsiniz. Buradaki isimler sonraki sekmelerde açılır liste seçeneği olur.")
+with tab1:
+    st.subheader("Grup Takımlarını Seç ve Eşleşmeleri Oluştur")
+    col1, col2 = st.columns(2)
+    with col1:
+        grup_adi = st.text_input("Grup Adı (Örn: ERKEK A)")
+        takim_listesi = st.text_area("Takımları Alt Alta Yaz (4 Takım Olmalı)")
     
-    # Listeyi dataframe formatına sokup gösteriyoruz
-    havuz_df = pd.DataFrame({"Takım Adı": st.session_state.havuz_listesi})
-    guncel_havuz = st.data_editor(havuz_df, num_rows="dynamic", use_container_width=True, key="havuz_editor")
-    
-    # Değişiklikleri kaydet
-    st.session_state.havuz_listesi = guncel_havuz["Takım Adı"].dropna().unique().tolist()
+    if st.button("🚀 Eşleşmeleri ve Programı Otomatik Oluştur"):
+        takimlar = [t.strip() for t in takim_listesi.split('\n') if t.strip()]
+        if len(takimlar) == 4:
+            yeni_maclar = eslesmeleri_olustur(grup_adi, takimlar)
+            yeni_df = pd.DataFrame(yeni_maclar)
+            yeni_df = yeni_df.rename(columns={"T1": "Takım 1", "T2": "Takım 2"})
+            # Sütunları ekle
+            for col in ["1.Set T1", "1.Set T2", "2.Set T1", "2.Set T2", "3.Set T1", "3.Set T2"]:
+                yeni_df[col] = 0
+            
+            st.session_state.skor_tablosu = pd.concat([st.session_state.skor_tablosu, yeni_df], ignore_index=True)
+            st.success("Eşleşmeler oluşturuldu! 'Skor Girişi' sekmesine gidebilirsiniz.")
+        else:
+            st.error("Lütfen tam olarak 4 takım girin.")
 
-# --- SEKME 2: GRUP ATAMALARI ---
-with sekme_gruplar:
-    st.subheader("Gruplara Takım Atama Ekranı")
+with tab2:
+    st.subheader("Maç Skorlarını Set Set Girin")
+    st.info("Sistem, girdiğin set skorlarına göre set kazananlarını otomatik hesaplayacaktır.")
     
-    guncel_gruplar = st.data_editor(
-        st.session_state.grup_tablosu,
-        column_config={
-            "Grup": st.column_config.SelectboxColumn("Grup Adı", options=["ERKEK A GRUBU", "ERKEK B GRUBU", "KADIN A GRUBU", "KADIN B GRUBU"], required=True),
-            "Grup Sırası": st.column_config.TextColumn("Grup Sırası", disabled=True),
-            "Seçilen Takım": st.column_config.SelectboxColumn("Seçilen Takım", options=st.session_state.havuz_listesi, required=True)
-        },
-        num_rows="dynamic",
-        use_container_width=True,
-        key="grup_editor"
-    )
-    st.session_state.grup_tablosu = guncel_gruplar
-    aktif_secili_takimlar = guncel_gruplar["Seçilen Takım"].dropna().unique().tolist()
+    st.session_state.skor_tablosu = st.data_editor(st.session_state.skor_tablosu, use_container_width=True)
 
-# --- SEKME 3: SKOR GİRİŞ EKRANI ---
-with sekme_skor:
-    st.subheader("Maç Programı ve Skor Giriş Tablosu")
+with tab3:
+    st.subheader("Otomatik Puan Durumu")
     
-    guncel_skorlar = st.data_editor(
-        st.session_state.skor_tablosu,
-        column_config={
-            GRUP_COL: st.column_config.SelectboxColumn("Grup", options=["ERKEK A GRUBU", "ERKEK B GRUBU", "KADIN A GRUBU", "KADIN B GRUBU"]),
-            GUN_COL: st.column_config.SelectboxColumn("Gün", options=[f"{i}. Gün" for i in range(1, 11)]),
-            ESLESME_COL: st.column_config.TextColumn("Eşleşme"),
-            BRANS_COL: st.column_config.SelectboxColumn("Branş", options=["1. Tekler", "2. Tekler", "Çiftler"]),
-            TAKIM1_COL: st.column_config.SelectboxColumn("Takım 1", options=aktif_secili_takimlar),
-            TAKIM2_COL: st.column_config.SelectboxColumn("Takım 2", options=aktif_secili_takimlar),
-            T1_MAC: st.column_config.NumberColumn("T1 Maç", min_value=0, max_value=1, default=0),
-            T2_MAC: st.column_config.NumberColumn("T2 Maç", min_value=0, max_value=1, default=0),
-            T1_SET: st.column_config.NumberColumn("T1 Set", min_value=0, max_value=3, default=0),
-            T2_SET: st.column_config.NumberColumn("T2 Set", min_value=0, max_value=3, default=0),
-            T1_OYUN: st.column_config.NumberColumn("T1 Oyun", min_value=0, max_value=20, default=0),
-            T2_OYUN: st.column_config.NumberColumn("T2 Oyun", min_value=0, max_value=20, default=0),
-            TIE_KAZANANI: st.column_config.SelectboxColumn("Tie Kazananı (Galibiyet)", options=aktif_secili_takimlar)
-        },
-        num_rows="dynamic",
-        use_container_width=True,
-        key="skor_editor"
-    )
-    st.session_state.skor_tablosu = guncel_skorlar
-
-# --- SEKME 4: GRUP SIRALAMALARI ---
-with sekme_siralama:
-    st.subheader("Canlı Puan Durumu ve Raporlar")
-    
-    df_hesap = st.session_state.skor_tablosu.copy()
-    df_hesap = df_hesap.dropna(subset=[TAKIM1_COL, TAKIM2_COL])
-    
-    if df_hesap.empty:
-        st.warning("Hesaplanacak maç verisi bulunamadı. Lütfen 3. Sekmeden skor giriniz.")
+    if not st.session_state.skor_tablosu.empty:
+        df = st.session_state.skor_tablosu.copy()
+        
+        # --- OTOMATİK HESAPLAMA MANTIĞI ---
+        # Set kazananı hesapla
+        df['T1_Set_Skor'] = (df['1.Set T1'] > df['1.Set T2']).astype(int) + (df['2.Set T1'] > df['2.Set T2']).astype(int) + (df['3.Set T1'] > df['3.Set T2']).astype(int)
+        df['T2_Set_Skor'] = (df['1.Set T2'] > df['1.Set T1']).astype(int) + (df['2.Set T2'] > df['2.Set T1']).astype(int) + (df['3.Set T2'] > df['3.Set T1']).astype(int)
+        
+        # Maç kazananı
+        df['T1_Mac_Win'] = (df['T1_Set_Skor'] > df['T2_Set_Skor']).astype(int)
+        df['T2_Mac_Win'] = (df['T2_Set_Skor'] > df['T1_Set_Skor']).astype(int)
+        
+        # Puanları topla (Bu kısmı Excel'indeki mantığa göre geliştiriyoruz)
+        results = []
+        for _, row in df.iterrows():
+            results.append({"Grup": row['Grup'], "Takım": row['Takım 1'], "Galibiyet": row['T1_Mac_Win'], "Set": row['T1_Set_Skor'], "VerilenSet": row['T2_Set_Skor']})
+            results.append({"Grup": row['Grup'], "Takım": row['Takım 2'], "Galibiyet": row['T2_Mac_Win'], "Set": row['T2_Set_Skor'], "VerilenSet": row['T1_Set_Skor']})
+        
+        final_df = pd.DataFrame(results).groupby(['Grup', 'Takım']).sum().reset_index()
+        final_df['Set Averajı'] = final_df['Set'] - final_df['VerilenSet']
+        
+        st.dataframe(final_df.sort_values(by=['Grup', 'Galibiyet', 'Set Averajı'], ascending=[True, False, False]), use_container_width=True)
     else:
-        try:
-            # Sayısal veri zorlaması
-            sayisal_sutunlar = [T1_MAC, T2_MAC, T1_SET, T2_SET, T1_OYUN, T2_OYUN]
-            for col in sayisal_sutunlar:
-                df_hesap[col] = pd.to_numeric(df_hesap[col], errors='coerce').fillna(0)
-                
-            yeni_sutunlar = ['Grup', 'Takım Adı', 'Aldığı Maç', 'Verdiği Maç', 'Aldığı Set', 'Verdiği Set', 'Aldığı Oyun', 'Verdiği Oyun', 'Galibiyet_Adayi']
-            
-            # Takım 1 Matrisi
-            t1 = df_hesap[[GRUP_COL, TAKIM1_COL, T1_MAC, T2_MAC, T1_SET, T2_SET, T1_OYUN, T2_OYUN, TIE_KAZANANI]].copy()
-            t1.columns = yeni_sutunlar
-            t1['Galibiyet'] = (t1['Galibiyet_Adayi'] == t1['Takım Adı']).astype(int)
-            
-            # Takım 2 Matrisi
-            t2 = df_hesap[[GRUP_COL, TAKIM2_COL, T2_MAC, T1_MAC, T2_SET, T1_SET, T2_OYUN, T1_OYUN, TIE_KAZANANI]].copy()
-            t2.columns = yeni_sutunlar
-            t2['Galibiyet'] = (t2['Galibiyet_Adayi'] == t2['Takım Adı']).astype(int)
-            
-            # Birleştirme ve Matematiksel Toplamlar
-            birlikte = pd.concat([t1, t2], ignore_index=True)
-            siralama = birlikte.groupby(['Grup', 'Takım Adı']).sum(numeric_only=True).reset_index()
-            
-            # Excel İle Birebir Eşit Averaj Hesapları
-            siralama['Maç Averajı'] = siralama['Aldığı Maç'] - siralama['Verdiği Maç']
-            siralama['Set Averajı'] = siralama['Aldığı Set'] - siralama['Verdiği Set']
-            siralama['Oyun Averajı'] = siralama['Aldığı Oyun'] - siralama['Verdiği Oyun']
-            
-            # Turnuva Kriterlerine Göre Sıralama Önceliği
-            siralama = siralama.sort_values(
-                by=['Grup', 'Galibiyet', 'Maç Averajı', 'Set Averajı', 'Oyun Averajı'],
-                ascending=[True, False, False, False, False]
-            )
-            
-            # Sütun yerleşimi
-            siralama = siralama[[
-                'Grup', 'Galibiyet', 'Takım Adı', 'Aldığı Maç', 'Verdiği Maç', 'Maç Averajı',
-                'Aldığı Set', 'Verdiği Set', 'Set Averajı', 'Aldığı Oyun', 'Verdiği Oyun', 'Oyun Averajı'
-            ]]
-            
-            # Her grubu kendi başlığı altında yayınlama
-            for grup_ismi in siralama['Grup'].unique():
-                st.markdown(f"### 🏆 {grup_ismi} SIRALAMASI")
-                grup_df = siralama[siralama['Grup'] == grup_ismi].drop(columns=['Grup']).reset_index(drop=True)
-                grup_df.index = grup_df.index + 1
-                st.dataframe(grup_df, use_container_width=True)
-                st.markdown("---")
-                
-        except Exception as e:
-            st.error(f"Sıralama hesaplanırken bir senkronizasyon hatası oluştu: {e}")
+        st.warning("Henüz veri yok.")
