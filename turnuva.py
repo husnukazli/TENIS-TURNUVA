@@ -50,11 +50,28 @@ with tab1:
 with tab2:
     st.subheader("Maç Skorlarını Girin")
     if not st.session_state.skor_tablosu.empty:
-        # Editörü geçici bir değişkene alıyoruz
-        edited_df = st.data_editor(st.session_state.skor_tablosu, use_container_width=True)
-        # Kaydet butonu ile veriyi işliyoruz
-        if st.button("✅ Skorları Kaydet"):
-            st.session_state.skor_tablosu = edited_df
+        gruplar = st.session_state.skor_tablosu['Grup'].unique()
+        secilen_grup = st.selectbox("Düzenlemek İçin Grup Seç:", gruplar)
+        
+        # Seçili gruba göre veriyi filtrele
+        df_grup = st.session_state.skor_tablosu[st.session_state.skor_tablosu['Grup'] == secilen_grup].copy()
+        
+        # Düzenlenecek verileri tutmak için dict
+        edited_dfs = {}
+        
+        # Gün gün ayırarak göster
+        for gun in ["1. Gün", "2. Gün", "3. Gün"]:
+            st.markdown(f"### {gun}")
+            df_gun = df_grup[df_grup['Gün'] == gun]
+            if not df_gun.empty:
+                edited_dfs[gun] = st.data_editor(df_gun, use_container_width=True, key=f"editor_{gun}")
+        
+        if st.button("✅ Tüm Skorları Kaydet"):
+            # Güncellenen verileri birleştir
+            all_edited = pd.concat(edited_dfs.values())
+            # Ana tabloda güncelle
+            st.session_state.skor_tablosu.update(all_edited)
+            st.success("Skorlar kaydedildi!")
             st.rerun()
     else:
         st.info("Henüz grup oluşturmadınız.")
@@ -63,28 +80,19 @@ with tab3:
     st.subheader("Otomatik Puan Durumu")
     if not st.session_state.skor_tablosu.empty:
         df = st.session_state.skor_tablosu.copy()
-        
         df['T1_Oyun'] = df['1.Set T1'] + df['2.Set T1'] + df['3.Set T1']
         df['T2_Oyun'] = df['1.Set T2'] + df['2.Set T2'] + df['3.Set T2']
-        
         df['T1_Set_Skor'] = (df['1.Set T1'] > df['1.Set T2']).astype(int) + (df['2.Set T1'] > df['2.Set T2']).astype(int) + (df['3.Set T1'] > df['3.Set T2']).astype(int)
         df['T2_Set_Skor'] = (df['1.Set T2'] > df['1.Set T1']).astype(int) + (df['2.Set T2'] > df['2.Set T1']).astype(int) + (df['3.Set T2'] > df['3.Set T1']).astype(int)
-        
         df['T1_Match_Win'] = (df['T1_Set_Skor'] > df['T2_Set_Skor']).astype(int)
         df['T2_Match_Win'] = (df['T2_Set_Skor'] > df['T1_Set_Skor']).astype(int)
         
-        seriler = df.groupby(['Grup', 'Gün', 'Eşleşme', 'Takım 1', 'Takım 2']).agg({
-            'T1_Match_Win': 'sum', 'T2_Match_Win': 'sum', 
-            'T1_Set_Skor': 'sum', 'T2_Set_Skor': 'sum',
-            'T1_Oyun': 'sum', 'T2_Oyun': 'sum'
-        }).reset_index()
-        
+        seriler = df.groupby(['Grup', 'Gün', 'Eşleşme', 'Takım 1', 'Takım 2']).agg({'T1_Match_Win': 'sum', 'T2_Match_Win': 'sum', 'T1_Set_Skor': 'sum', 'T2_Set_Skor': 'sum', 'T1_Oyun': 'sum', 'T2_Oyun': 'sum'}).reset_index()
         seriler['T1_Win'] = (seriler['T1_Match_Win'] >= 2).astype(int)
         seriler['T2_Win'] = (seriler['T2_Match_Win'] >= 2).astype(int)
         
         t1 = seriler[['Grup', 'Takım 1', 'T1_Win', 'T1_Match_Win', 'T2_Match_Win', 'T1_Set_Skor', 'T2_Set_Skor', 'T1_Oyun', 'T2_Oyun']]
         t1.columns = ['Grup', 'Takım', 'Galibiyet', 'Aldığı Maç', 'Verdiği Maç', 'Aldığı Set', 'Verdiği Set', 'Aldığı Oyun', 'Verdiği Oyun']
-        
         t2 = seriler[['Grup', 'Takım 2', 'T2_Win', 'T2_Match_Win', 'T1_Match_Win', 'T2_Set_Skor', 'T1_Set_Skor', 'T2_Oyun', 'T1_Oyun']]
         t2.columns = ['Grup', 'Takım', 'Galibiyet', 'Aldığı Maç', 'Verdiği Maç', 'Aldığı Set', 'Verdiği Set', 'Aldığı Oyun', 'Verdiği Oyun']
         
