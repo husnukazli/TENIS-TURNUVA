@@ -1,9 +1,13 @@
 import streamlit as st
 import pandas as pd
+import os
 
 # Sayfa başlığı
 st.set_page_config(page_title="Turnuva Sıralaması", layout="wide")
 st.title("🎾 Turnuva Sıralama Sistemi")
+
+# Okunacak dosyanın tam adını buraya yazıyoruz
+DOSYA_ADI = "Turnuva_Dinamik_Formullu.xlsx - Skor Giriş Ekranı.csv"
 
 def turnuva_siralamasi_hesapla(skor_dosyasi):
     df = pd.read_csv(skor_dosyasi)
@@ -40,14 +44,12 @@ def turnuva_siralamasi_hesapla(skor_dosyasi):
                          'Aldığı Set', 'Verdiği Set', 'Set Averajı', 'Aldığı Oyun', 'Verdiği Oyun', 'Oyun Averajı']]
     return siralama
 
-# Web Arayüzü: Kullanıcıya dosya yükleme seçeneği sunalım
-st.write("Lütfen skorların bulunduğu CSV dosyasını yükleyin.")
-yuklenen_dosya = st.file_uploader("Skor Giriş Ekranı CSV dosyasını seçin", type=['csv'])
 
-if yuklenen_dosya is not None:
+# Web Arayüzü: Dosyayı otomatik okuma
+if os.path.exists(DOSYA_ADI):
     try:
-        sonuc_df = turnuva_siralamasi_hesapla(yuklenen_dosya)
-        st.success("Sıralama başarıyla hesaplandı!")
+        sonuc_df = turnuva_siralamasi_hesapla(DOSYA_ADI)
+        st.success("Veriler arka plandan başarıyla çekildi ve sıralama oluşturuldu!")
         
         # Sonucu ekranda tablo olarak göster
         st.dataframe(sonuc_df, use_container_width=True)
@@ -61,4 +63,6 @@ if yuklenen_dosya is not None:
             mime='text/csv',
         )
     except Exception as e:
-        st.error(f"Bir hata oluştu. Lütfen doğru dosyayı yüklediğinizden emin olun. Hata detayı: {e}")
+        st.error(f"Dosya okunurken bir hata oluştu. İçeriği kontrol edin. Hata detayı: {e}")
+else:
+    st.error(f"Hata: '{DOSYA_ADI}' dosyası GitHub'da bulunamadı. Lütfen dosyanın GitHub'da kodunuzla aynı yerde olduğundan ve adının birebir aynı olduğundan emin olun.")
