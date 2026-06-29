@@ -27,6 +27,9 @@ def eslesmeleri_olustur(grup_adi, takimlar):
 # --- 2. HAFIZA ---
 if 'skor_tablosu' not in st.session_state:
     st.session_state.skor_tablosu = pd.DataFrame(columns=["Grup", "Gün", "Eşleşme", "Branş", "Takım 1", "Takım 2", "1.Set T1", "1.Set T2", "2.Set T1", "2.Set T2", "3.Set T1", "3.Set T2"])
+# Yedekleme için boş değişken
+if 'backup_skor_tablosu' not in st.session_state:
+    st.session_state.backup_skor_tablosu = None
 
 # --- 3. SEKMELER ---
 tab1, tab2, tab3, tab4 = st.tabs(["👥 1. Grup Ayarları", "✍️ 2. Skor Girişi", "🏆 3. Puan Durumu", "⚙️ 4. Yönetim"])
@@ -53,13 +56,9 @@ with tab2:
         gruplar = st.session_state.skor_tablosu['Grup'].unique()
         secilen_grup = st.selectbox("Düzenlemek İçin Grup Seç:", gruplar)
         
-        # Seçili gruba göre veriyi filtrele
         df_grup = st.session_state.skor_tablosu[st.session_state.skor_tablosu['Grup'] == secilen_grup].copy()
-        
-        # Düzenlenecek verileri tutmak için dict
         edited_dfs = {}
         
-        # Gün gün ayırarak göster
         for gun in ["1. Gün", "2. Gün", "3. Gün"]:
             st.markdown(f"### {gun}")
             df_gun = df_grup[df_grup['Gün'] == gun]
@@ -67,9 +66,7 @@ with tab2:
                 edited_dfs[gun] = st.data_editor(df_gun, use_container_width=True, key=f"editor_{gun}")
         
         if st.button("✅ Tüm Skorları Kaydet"):
-            # Güncellenen verileri birleştir
             all_edited = pd.concat(edited_dfs.values())
-            # Ana tabloda güncelle
             st.session_state.skor_tablosu.update(all_edited)
             st.success("Skorlar kaydedildi!")
             st.rerun()
@@ -109,6 +106,20 @@ with tab3:
 
 with tab4:
     st.subheader("⚙️ Yönetim Paneli")
+    # Yeni eklenen yedekleme butonları
+    col1, col2 = st.columns(2)
+    with col1:
+        if st.button("💾 Mevcut Veriyi Yedekle"):
+            st.session_state.backup_skor_tablosu = st.session_state.skor_tablosu.copy()
+            st.success("Yedeklendi!")
+    with col2:
+        if st.button("↩️ Yedeği Geri Yükle"):
+            if st.session_state.backup_skor_tablosu is not None:
+                st.session_state.skor_tablosu = st.session_state.backup_skor_tablosu.copy()
+                st.rerun()
+            else:
+                st.warning("Henüz kayıtlı bir yedek yok!")
+
     if not st.session_state.skor_tablosu.empty:
         gruplar = st.session_state.skor_tablosu['Grup'].unique()
         grup_sec = st.selectbox("Düzenlenecek Grubu Seç:", gruplar)
