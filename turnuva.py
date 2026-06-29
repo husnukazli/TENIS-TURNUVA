@@ -41,45 +41,62 @@ with tab1:
             yeni_maclar = eslesmeleri_olustur(grup_adi, takimlar)
             yeni_df = pd.DataFrame(yeni_maclar)
             st.session_state.skor_tablosu = pd.concat([st.session_state.skor_tablosu, yeni_df], ignore_index=True)
+            # İndeksleri 1'den başlat
+            st.session_state.skor_tablosu.index = range(1, len(st.session_state.skor_tablosu) + 1)
             st.success("Eşleşmeler oluşturuldu!")
-            st.rerun() # Veri güncellendiğinde tüm ekranlar tazelenir
+            st.rerun()
         else:
             st.error("Lütfen tam olarak 4 takım girin.")
 
 with tab2:
     st.subheader("Maç Skorlarını Girin")
-    # Veri varsa göster, yoksa bilgi ver
     if not st.session_state.skor_tablosu.empty:
-        # Data Editor doğrudan session_state'i günceller
         st.session_state.skor_tablosu = st.data_editor(st.session_state.skor_tablosu, use_container_width=True)
     else:
-        st.info("Henüz grup oluşturmadınız. 1. Sekmeden başlayın.")
+        st.info("Henüz grup oluşturmadınız.")
 
 with tab3:
     st.subheader("Otomatik Puan Durumu")
     if not st.session_state.skor_tablosu.empty:
         df = st.session_state.skor_tablosu.copy()
+        
+        # Oyun skorları hesaplama
+        df['T1_Oyun'] = df['1.Set T1'] + df['2.Set T1'] + df['3.Set T1']
+        df['T2_Oyun'] = df['1.Set T2'] + df['2.Set T2'] + df['3.Set T2']
+        
         df['T1_Set_Skor'] = (df['1.Set T1'] > df['1.Set T2']).astype(int) + (df['2.Set T1'] > df['2.Set T2']).astype(int) + (df['3.Set T1'] > df['3.Set T2']).astype(int)
         df['T2_Set_Skor'] = (df['1.Set T2'] > df['1.Set T1']).astype(int) + (df['2.Set T2'] > df['2.Set T1']).astype(int) + (df['3.Set T2'] > df['3.Set T1']).astype(int)
+        
         df['T1_Match_Win'] = (df['T1_Set_Skor'] > df['T2_Set_Skor']).astype(int)
         df['T2_Match_Win'] = (df['T2_Set_Skor'] > df['T1_Set_Skor']).astype(int)
         
-        seriler = df.groupby(['Grup', 'Gün', 'Eşleşme', 'Takım 1', 'Takım 2']).agg({'T1_Match_Win': 'sum', 'T2_Match_Win': 'sum', 'T1_Set_Skor': 'sum', 'T2_Set_Skor': 'sum'}).reset_index()
+        seriler = df.groupby(['Grup', 'Gün', 'Eşleşme', 'Takım 1', 'Takım 2']).agg({
+            'T1_Match_Win': 'sum', 'T2_Match_Win': 'sum', 
+            'T1_Set_Skor': 'sum', 'T2_Set_Skor': 'sum',
+            'T1_Oyun': 'sum', 'T2_Oyun': 'sum'
+        }).reset_index()
+        
         seriler['T1_Win'] = (seriler['T1_Match_Win'] >= 2).astype(int)
         seriler['T2_Win'] = (seriler['T2_Match_Win'] >= 2).astype(int)
         
-        t1 = seriler[['Grup', 'Takım 1', 'T1_Win', 'T1_Match_Win', 'T2_Match_Win', 'T1_Set_Skor', 'T2_Set_Skor']]
-        t1.columns = ['Grup', 'Takım', 'Galibiyet', 'Aldığı Maç', 'Verdiği Maç', 'Aldığı Set', 'Verdiği Set']
-        t2 = seriler[['Grup', 'Takım 2', 'T2_Win', 'T2_Match_Win', 'T1_Match_Win', 'T2_Set_Skor', 'T1_Set_Skor']]
-        t2.columns = ['Grup', 'Takım', 'Galibiyet', 'Aldığı Maç', 'Verdiği Maç', 'Aldığı Set', 'Verdiği Set']
+        # T1 ve T2 İstatistiklerini Toplama
+        t1 = seriler[['Grup', 'Takım 1', 'T1_Win', 'T1_Match_Win', 'T2_Match_Win', 'T1_Set_Skor', 'T2_Set_Skor', 'T1_Oyun', 'T2_Oyun']]
+        t1.columns = ['Grup', 'Takım', 'Galibiyet', 'Aldığı Maç', 'Verdiği Maç', 'Aldığı Set', 'Verdiği Set', 'Aldığı Oyun', 'Verdiği Oyun']
+        
+        t2 = seriler[['Grup', 'Takım 2', 'T2_Win', 'T2_Match_Win', 'T1_Match_Win', 'T2_Set_Skor', 'T1_Set_Skor', 'T2_Oyun', 'T1_Oyun']]
+        t2.columns = ['Grup', 'Takım', 'Galibiyet', 'Aldığı Maç', 'Verdiği Maç', 'Aldığı Set', 'Verdiği Set', 'Aldığı Oyun', 'Verdiği Oyun']
         
         tum_stats = pd.concat([t1, t2]).groupby(['Grup', 'Takım']).sum().reset_index()
         tum_stats['Maç Av.'] = tum_stats['Aldığı Maç'] - tum_stats['Verdiği Maç']
         tum_stats['Set Av.'] = tum_stats['Aldığı Set'] - tum_stats['Verdiği Set']
+        tum_stats['Oyun Av.'] = tum_stats['Aldığı Oyun'] - tum_stats['Verdiği Oyun']
         
         for grup in tum_stats['Grup'].unique():
             st.markdown(f"### 🏆 {grup} Puan Durumu")
-            st.dataframe(tum_stats[tum_stats['Grup'] == grup].drop(columns=['Grup']).sort_values(by=['Galibiyet', 'Maç Av.'], ascending=False), use_container_width=True)
+            # İndeksleri 1'den başlatarak göster
+            grup_df = tum_stats[tum_stats['Grup'] == grup].drop(columns=['Grup']).sort_values(by=['Galibiyet', 'Maç Av.', 'Oyun Av.'], ascending=False)
+            grup_df.index = range(1, len(grup_df) + 1)
+            st.dataframe(grup_df, use_container_width=True)
 
 with tab4:
     st.subheader("⚙️ Yönetim Paneli")
@@ -87,7 +104,6 @@ with tab4:
         gruplar = st.session_state.skor_tablosu['Grup'].unique()
         grup_sec = st.selectbox("Düzenlenecek Grubu Seç:", gruplar)
         
-        # Filtreli takım listesi
         df_grup = st.session_state.skor_tablosu[st.session_state.skor_tablosu['Grup'] == grup_sec]
         tum_takimlar = sorted(list(set(df_grup['Takım 1'].unique().tolist() + df_grup['Takım 2'].unique().tolist())))
         
@@ -103,4 +119,12 @@ with tab4:
         silinecek_grup = st.selectbox("Silinecek Grup:", gruplar)
         if st.button("❌ Bu Grubu Tamamen Sil"):
             st.session_state.skor_tablosu = st.session_state.skor_tablosu[st.session_state.skor_tablosu['Grup'] != silinecek_grup]
+            st.session_state.skor_tablosu.index = range(1, len(st.session_state.skor_tablosu) + 1)
             st.rerun()
+    else:
+        st.info("Henüz grup yok.")
+
+    st.divider()
+    if st.button("🚨 TÜM VERİLERİ SIFIRLA"):
+        st.session_state.skor_tablosu = pd.DataFrame(columns=["Grup", "Gün", "Eşleşme", "Branş", "Takım 1", "Takım 2", "1.Set T1", "1.Set T2", "2.Set T1", "2.Set T2", "3.Set T1", "3.Set T2"])
+        st.rerun()
