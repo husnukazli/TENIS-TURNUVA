@@ -6,14 +6,13 @@ st.title("🎾 Profesyonel Tenis Turnuva Yönetim Sistemi")
 
 # --- 1. OTOMASYON MOTORU ---
 def eslesmeleri_olustur(grup_adi, takimlar):
-    if len(takimlar) < 4: return []
     base_matches = [
-        {"Gün": "1. Gün", "Eşleşme": "1 ve 4", "T1": takimlar[0], "T2": takimlar[3]},
-        {"Gün": "1. Gün", "Eşleşme": "2 ve 3", "T1": takimlar[1], "T2": takimlar[2]},
-        {"Gün": "2. Gün", "Eşleşme": "1 ve 3", "T1": takimlar[0], "T2": takimlar[2]},
-        {"Gün": "2. Gün", "Eşleşme": "2 ve 4", "T1": takimlar[1], "T2": takimlar[3]},
-        {"Gün": "3. Gün", "Eşleşme": "1 ve 2", "T1": takimlar[0], "T2": takimlar[1]},
-        {"Gün": "3. Gün", "Eşleşme": "3 ve 4", "T1": takimlar[2], "T2": takimlar[3]},
+        {"Gün": "1. Gün", "Eşleşme": "1 ve 4", "Takım 1": takimlar[0], "Takım 2": takimlar[3]},
+        {"Gün": "1. Gün", "Eşleşme": "2 ve 3", "Takım 1": takimlar[1], "Takım 2": takimlar[2]},
+        {"Gün": "2. Gün", "Eşleşme": "1 ve 3", "Takım 1": takimlar[0], "Takım 2": takimlar[2]},
+        {"Gün": "2. Gün", "Eşleşme": "2 ve 4", "Takım 1": takimlar[1], "Takım 2": takimlar[3]},
+        {"Gün": "3. Gün", "Eşleşme": "1 ve 2", "Takım 1": takimlar[0], "Takım 2": takimlar[1]},
+        {"Gün": "3. Gün", "Eşleşme": "3 ve 4", "Takım 1": takimlar[2], "Takım 2": takimlar[3]},
     ]
     program = []
     for m in base_matches:
@@ -21,6 +20,7 @@ def eslesmeleri_olustur(grup_adi, takimlar):
             satir = m.copy()
             satir["Branş"] = brans
             satir["Grup"] = grup_adi
+            satir.update({"1.Set T1": 0, "1.Set T2": 0, "2.Set T1": 0, "2.Set T2": 0, "3.Set T1": 0, "3.Set T2": 0})
             program.append(satir)
     return program
 
@@ -40,22 +40,20 @@ with tab1:
         if len(takimlar) == 4:
             yeni_maclar = eslesmeleri_olustur(grup_adi, takimlar)
             yeni_df = pd.DataFrame(yeni_maclar)
-            for col in ["1.Set T1", "1.Set T2", "2.Set T1", "2.Set T2", "3.Set T1", "3.Set T2"]:
-                yeni_df[col] = 0
             st.session_state.skor_tablosu = pd.concat([st.session_state.skor_tablosu, yeni_df], ignore_index=True)
             st.success("Eşleşmeler oluşturuldu!")
-            st.rerun() # Veri güncellendiğinde tüm sekmelerin tazelenmesi için zorunlu
+            st.rerun() # Veri güncellendiğinde tüm ekranlar tazelenir
         else:
             st.error("Lütfen tam olarak 4 takım girin.")
 
 with tab2:
     st.subheader("Maç Skorlarını Girin")
+    # Veri varsa göster, yoksa bilgi ver
     if not st.session_state.skor_tablosu.empty:
-        sutun_sirasi = ["Grup", "Gün", "Eşleşme", "Branş", "Takım 1", "Takım 2", "1.Set T1", "1.Set T2", "2.Set T1", "2.Set T2", "3.Set T1", "3.Set T2"]
-        # Doğrudan st.session_state.skor_tablosu üzerinde işlem yapıyoruz
-        st.session_state.skor_tablosu = st.data_editor(st.session_state.skor_tablosu[sutun_sirasi], use_container_width=True)
+        # Data Editor doğrudan session_state'i günceller
+        st.session_state.skor_tablosu = st.data_editor(st.session_state.skor_tablosu, use_container_width=True)
     else:
-        st.info("Henüz oluşturulmuş bir eşleşme yok. 1. Sekmeden grup oluşturun.")
+        st.info("Henüz grup oluşturmadınız. 1. Sekmeden başlayın.")
 
 with tab3:
     st.subheader("Otomatik Puan Durumu")
@@ -89,7 +87,7 @@ with tab4:
         gruplar = st.session_state.skor_tablosu['Grup'].unique()
         grup_sec = st.selectbox("Düzenlenecek Grubu Seç:", gruplar)
         
-        # Takım listesini güvenli bir şekilde filtreleyelim
+        # Filtreli takım listesi
         df_grup = st.session_state.skor_tablosu[st.session_state.skor_tablosu['Grup'] == grup_sec]
         tum_takimlar = sorted(list(set(df_grup['Takım 1'].unique().tolist() + df_grup['Takım 2'].unique().tolist())))
         
@@ -97,22 +95,12 @@ with tab4:
         yeni_isim = st.text_input("Yeni İsim:")
         
         if st.button("Takımı Güncelle"):
-            mask1 = (st.session_state.skor_tablosu['Grup'] == grup_sec) & (st.session_state.skor_tablosu['Takım 1'] == eski_isim)
-            mask2 = (st.session_state.skor_tablosu['Grup'] == grup_sec) & (st.session_state.skor_tablosu['Takım 2'] == eski_isim)
-            st.session_state.skor_tablosu.loc[mask1, 'Takım 1'] = yeni_isim
-            st.session_state.skor_tablosu.loc[mask2, 'Takım 2'] = yeni_isim
+            st.session_state.skor_tablosu.loc[st.session_state.skor_tablosu['Takım 1'] == eski_isim, 'Takım 1'] = yeni_isim
+            st.session_state.skor_tablosu.loc[st.session_state.skor_tablosu['Takım 2'] == eski_isim, 'Takım 2'] = yeni_isim
             st.rerun()
             
         st.divider()
-        st.subheader("Grup Silme")
         silinecek_grup = st.selectbox("Silinecek Grup:", gruplar)
         if st.button("❌ Bu Grubu Tamamen Sil"):
             st.session_state.skor_tablosu = st.session_state.skor_tablosu[st.session_state.skor_tablosu['Grup'] != silinecek_grup]
             st.rerun()
-    else:
-        st.info("Henüz grup yok.")
-
-    st.divider()
-    if st.button("🚨 TÜM VERİLERİ SIFIRLA"):
-        st.session_state.skor_tablosu = pd.DataFrame(columns=["Grup", "Gün", "Eşleşme", "Branş", "Takım 1", "Takım 2", "1.Set T1", "1.Set T2", "2.Set T1", "2.Set T2", "3.Set T1", "3.Set T2"])
-        st.rerun()
