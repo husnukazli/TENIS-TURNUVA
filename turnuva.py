@@ -1,86 +1,80 @@
 import streamlit as st
 import pandas as pd
 
-st.set_page_config(page_title="Tenis Turnuva Otomasyonu", layout="wide")
-st.title("🎾 Profesyonel Tenis Turnuva Yönetim Sistemi")
+st.set_page_config(page_title="Turnuva Yönetimi", layout="wide")
+st.title("🎾 Profesyonel Turnuva Yönetim Sistemi")
 
-# --- 1. OTOMASYON MOTORU: EŞLEŞME OLUŞTURUCU ---
-def eslesmeleri_olustur(grup_adi, takimlar):
-    # Basit 4'lü grup için round-robin eşleşme mantığı
-    # takımlar listesi: [1.Takım, 2.Takım, 3.Takım, 4.Takım]
-    if len(takimlar) < 4: return []
-    
-    # Eşleşme düzeni: 1-4, 2-3 | 1-3, 2-4 | 1-2, 3-4
-    program = [
-        {"Gün": "1. Gün", "Eşleşme": "1 ve 4", "T1": takimlar[0], "T2": takimlar[3]},
-        {"Gün": "1. Gün", "Eşleşme": "2 ve 3", "T1": takimlar[1], "T2": takimlar[2]},
-        {"Gün": "2. Gün", "Eşleşme": "1 ve 3", "T1": takimlar[0], "T2": takimlar[2]},
-        {"Gün": "2. Gün", "Eşleşme": "2 ve 4", "T1": takimlar[1], "T2": takimlar[3]},
-        {"Gün": "3. Gün", "Eşleşme": "1 ve 2", "T1": takimlar[0], "T2": takimlar[1]},
-        {"Gün": "3. Gün", "Eşleşme": "3 ve 4", "T1": takimlar[2], "T2": takimlar[3]},
-    ]
-    for m in program: m["Grup"] = grup_adi
-    return program
+# --- 1. VERİ YÜKLEME (GERİ YÜKLEME BUTONU) ---
+with st.sidebar:
+    st.header("Veri Yönetimi")
+    uploaded_file = st.file_uploader("Kayıtlı CSV Dosyasını Geri Yükle", type="csv")
+    if uploaded_file is not None:
+        st.session_state.skor_tablosu = pd.read_csv(uploaded_file)
+        st.success("Dosya başarıyla yüklendi!")
 
-# --- 2. HAFIZA ---
+# --- 2. HAFIZA KURULUMU ---
 if 'skor_tablosu' not in st.session_state:
-    st.session_state.skor_tablosu = pd.DataFrame(columns=["Grup", "Gün", "Eşleşme", "Takım 1", "Takım 2", "1.Set T1", "1.Set T2", "2.Set T1", "2.Set T2", "3.Set T1", "3.Set T2"])
+    st.session_state.skor_tablosu = pd.DataFrame(columns=[
+        "Grup", "Gün", "Eşleşme", "Branş", "Takım 1", "Takım 2", 
+        "T1 Maç", "T2 Maç", "T1 Set", "T2 Set", "T1 Oyun", "T2 Oyun"
+    ])
 
-# --- 3. SEKMELER ---
-tab1, tab2, tab3 = st.tabs(["👥 Grup ve Eşleşme Ayarları", "✍️ Detaylı Skor Girişi", "🏆 Canlı Puan Durumu"])
+# --- 3. SEKME YAPISI ---
+tab1, tab2, tab3 = st.tabs(["✍️ Skor Giriş Ekranı", "🏆 Grup Sıralamaları", "💾 Kaydet"])
 
 with tab1:
-    st.subheader("Grup Takımlarını Seç ve Eşleşmeleri Oluştur")
-    col1, col2 = st.columns(2)
-    with col1:
-        grup_adi = st.text_input("Grup Adı (Örn: ERKEK A)")
-        takim_listesi = st.text_area("Takımları Alt Alta Yaz (4 Takım Olmalı)")
-    
-    if st.button("🚀 Eşleşmeleri ve Programı Otomatik Oluştur"):
-        takimlar = [t.strip() for t in takim_listesi.split('\n') if t.strip()]
-        if len(takimlar) == 4:
-            yeni_maclar = eslesmeleri_olustur(grup_adi, takimlar)
-            yeni_df = pd.DataFrame(yeni_maclar)
-            yeni_df = yeni_df.rename(columns={"T1": "Takım 1", "T2": "Takım 2"})
-            # Sütunları ekle
-            for col in ["1.Set T1", "1.Set T2", "2.Set T1", "2.Set T2", "3.Set T1", "3.Set T2"]:
-                yeni_df[col] = 0
-            
-            st.session_state.skor_tablosu = pd.concat([st.session_state.skor_tablosu, yeni_df], ignore_index=True)
-            st.success("Eşleşmeler oluşturuldu! 'Skor Girişi' sekmesine gidebilirsiniz.")
-        else:
-            st.error("Lütfen tam olarak 4 takım girin.")
+    st.subheader("Maç Skorlarını Girin")
+    st.session_state.skor_tablosu = st.data_editor(st.session_state.skor_tablosu, num_rows="dynamic", use_container_width=True)
 
 with tab2:
-    st.subheader("Maç Skorlarını Set Set Girin")
-    st.info("Sistem, girdiğin set skorlarına göre set kazananlarını otomatik hesaplayacaktır.")
-    
-    st.session_state.skor_tablosu = st.data_editor(st.session_state.skor_tablosu, use_container_width=True)
-
-with tab3:
     st.subheader("Otomatik Puan Durumu")
-    
     if not st.session_state.skor_tablosu.empty:
         df = st.session_state.skor_tablosu.copy()
         
-        # --- OTOMATİK HESAPLAMA MANTIĞI ---
-        # Set kazananı hesapla
-        df['T1_Set_Skor'] = (df['1.Set T1'] > df['1.Set T2']).astype(int) + (df['2.Set T1'] > df['2.Set T2']).astype(int) + (df['3.Set T1'] > df['3.Set T2']).astype(int)
-        df['T2_Set_Skor'] = (df['1.Set T2'] > df['1.Set T1']).astype(int) + (df['2.Set T2'] > df['2.Set T1']).astype(int) + (df['3.Set T2'] > df['3.Set T1']).astype(int)
+        # --- EŞLEŞME (SERİ) BAZLI GALİBİYET HESABI ---
+        # Aynı grupta, aynı gün, aynı eşleşme kodu olan maçları grupla
+        seriler = df.groupby(['Grup', 'Gün', 'Eşleşme', 'Takım 1', 'Takım 2']).agg({
+            'T1 Maç': 'sum', 'T2 Maç': 'sum',
+            'T1 Set': 'sum', 'T2 Set': 'sum',
+            'T1 Oyun': 'sum', 'T2 Oyun': 'sum'
+        }).reset_index()
         
-        # Maç kazananı
-        df['T1_Mac_Win'] = (df['T1_Set_Skor'] > df['T2_Set_Skor']).astype(int)
-        df['T2_Mac_Win'] = (df['T2_Set_Skor'] > df['T1_Set_Skor']).astype(int)
+        # Serinin kazananını belirle (2 veya 3 maç kazanan)
+        seriler['T1_Galibiyet'] = (seriler['T1 Maç'] > seriler['T2 Maç']).astype(int)
+        seriler['T2_Galibiyet'] = (seriler['T2 Maç'] > seriler['T1 Maç']).astype(int)
         
-        # Puanları topla (Bu kısmı Excel'indeki mantığa göre geliştiriyoruz)
-        results = []
-        for _, row in df.iterrows():
-            results.append({"Grup": row['Grup'], "Takım": row['Takım 1'], "Galibiyet": row['T1_Mac_Win'], "Set": row['T1_Set_Skor'], "VerilenSet": row['T2_Set_Skor']})
-            results.append({"Grup": row['Grup'], "Takım": row['Takım 2'], "Galibiyet": row['T2_Mac_Win'], "Set": row['T2_Set_Skor'], "VerilenSet": row['T1_Set_Skor']})
+        # --- HER TAKIM İÇİN TOPLAMLARI HESAPLA ---
+        # Takım 1 tarafı
+        t1_stats = seriler[['Grup', 'Takım 1', 'T1_Galibiyet', 'T1 Maç', 'T2 Maç', 'T1 Set', 'T2 Set', 'T1 Oyun', 'T2 Oyun']]
+        t1_stats.columns = ['Grup', 'Takım', 'Galibiyet', 'Aldığı Maç', 'Verdiği Maç', 'Aldığı Set', 'Verdiği Set', 'Aldığı Oyun', 'Verdiği Oyun']
         
-        final_df = pd.DataFrame(results).groupby(['Grup', 'Takım']).sum().reset_index()
-        final_df['Set Averajı'] = final_df['Set'] - final_df['VerilenSet']
+        # Takım 2 tarafı
+        t2_stats = seriler[['Grup', 'Takım 2', 'T2_Galibiyet', 'T2 Maç', 'T1 Maç', 'T2 Set', 'T1 Set', 'T2 Oyun', 'T1 Oyun']]
+        t2_stats.columns = ['Grup', 'Takım', 'Galibiyet', 'Aldığı Maç', 'Verdiği Maç', 'Aldığı Set', 'Verdiği Set', 'Aldığı Oyun', 'Verdiği Oyun']
         
-        st.dataframe(final_df.sort_values(by=['Grup', 'Galibiyet', 'Set Averajı'], ascending=[True, False, False]), use_container_width=True)
+        # Birleştir ve Grupla
+        tum_stats = pd.concat([t1_stats, t2_stats]).groupby(['Grup', 'Takım']).sum().reset_index()
+        
+        # Averajları Hesapla
+        tum_stats['Maç Averajı'] = tum_stats['Aldığı Maç'] - tum_stats['Verdiği Maç']
+        tum_stats['Set Averajı'] = tum_stats['Aldığı Set'] - tum_stats['Verdiği Set']
+        tum_stats['Oyun Averajı'] = tum_stats['Aldığı Oyun'] - tum_stats['Verdiği Oyun']
+        
+        # Sıralama: Galibiyet > Maç Av > Set Av > Oyun Av
+        tum_stats = tum_stats.sort_values(
+            by=['Grup', 'Galibiyet', 'Maç Averajı', 'Set Averajı', 'Oyun Averajı'],
+            ascending=[True, False, False, False, False]
+        )
+        
+        # Grupları ayrı tablo olarak yazdır
+        for grup in tum_stats['Grup'].unique():
+            st.markdown(f"### 🏆 {grup}")
+            st.dataframe(tum_stats[tum_stats['Grup'] == grup].drop(columns=['Grup']), use_container_width=True)
+            st.divider()
     else:
-        st.warning("Henüz veri yok.")
+        st.info("Skor girilmediği için henüz sıralama oluşmadı.")
+
+with tab3:
+    st.subheader("Verileri Kaydet")
+    csv = st.session_state.skor_tablosu.to_csv(index=False).encode('utf-8')
+    st.download_button("CSV Olarak İndir", data=csv, file_name="turnuva_kayit.csv", mime="text/csv")
