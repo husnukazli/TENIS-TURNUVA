@@ -1,5 +1,6 @@
 import streamlit as st
 import pandas as pd
+import io
 
 st.set_page_config(page_title="Tenis Turnuva Otomasyonu", layout="wide")
 st.title("🎾 Profesyonel Tenis Turnuva Yönetim Sistemi")
@@ -27,9 +28,6 @@ def eslesmeleri_olustur(grup_adi, takimlar):
 # --- 2. HAFIZA ---
 if 'skor_tablosu' not in st.session_state:
     st.session_state.skor_tablosu = pd.DataFrame(columns=["Grup", "Gün", "Eşleşme", "Branş", "Takım 1", "Takım 2", "1.Set T1", "1.Set T2", "2.Set T1", "2.Set T2", "3.Set T1", "3.Set T2"])
-# Yedekleme için boş değişken
-if 'backup_skor_tablosu' not in st.session_state:
-    st.session_state.backup_skor_tablosu = None
 
 # --- 3. SEKMELER ---
 tab1, tab2, tab3, tab4 = st.tabs(["👥 1. Grup Ayarları", "✍️ 2. Skor Girişi", "🏆 3. Puan Durumu", "⚙️ 4. Yönetim"])
@@ -106,20 +104,24 @@ with tab3:
 
 with tab4:
     st.subheader("⚙️ Yönetim Paneli")
-    # Yeni eklenen yedekleme butonları
+    
+    # DOSYA İLE YEDEKLEME SİSTEMİ
+    st.markdown("### 📁 Veri Dosyası İşlemleri")
     col1, col2 = st.columns(2)
+    
     with col1:
-        if st.button("💾 Mevcut Veriyi Yedekle"):
-            st.session_state.backup_skor_tablosu = st.session_state.skor_tablosu.copy()
-            st.success("Yedeklendi!")
+        csv = st.session_state.skor_tablosu.to_csv(index=False).encode('utf-8')
+        st.download_button("💾 Verileri İndir (Yedekle)", data=csv, file_name='turnuva_verisi.csv', mime='text/csv')
+    
     with col2:
-        if st.button("↩️ Yedeği Geri Yükle"):
-            if st.session_state.backup_skor_tablosu is not None:
-                st.session_state.skor_tablosu = st.session_state.backup_skor_tablosu.copy()
+        yuklenen_dosya = st.file_uploader("📂 Veri Dosyası Yükle (Geri Yükle)", type=['csv'])
+        if yuklenen_dosya is not None:
+            if st.button("🔄 Dosyayı Yükle ve Uygula"):
+                st.session_state.skor_tablosu = pd.read_csv(yuklenen_dosya)
+                st.success("Veri başarıyla geri yüklendi!")
                 st.rerun()
-            else:
-                st.warning("Henüz kayıtlı bir yedek yok!")
 
+    st.divider()
     if not st.session_state.skor_tablosu.empty:
         gruplar = st.session_state.skor_tablosu['Grup'].unique()
         grup_sec = st.selectbox("Düzenlenecek Grubu Seç:", gruplar)
