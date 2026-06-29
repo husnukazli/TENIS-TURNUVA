@@ -41,7 +41,6 @@ with tab1:
             yeni_maclar = eslesmeleri_olustur(grup_adi, takimlar)
             yeni_df = pd.DataFrame(yeni_maclar)
             st.session_state.skor_tablosu = pd.concat([st.session_state.skor_tablosu, yeni_df], ignore_index=True)
-            # İndeksleri 1'den başlat
             st.session_state.skor_tablosu.index = range(1, len(st.session_state.skor_tablosu) + 1)
             st.success("Eşleşmeler oluşturuldu!")
             st.rerun()
@@ -51,7 +50,12 @@ with tab1:
 with tab2:
     st.subheader("Maç Skorlarını Girin")
     if not st.session_state.skor_tablosu.empty:
-        st.session_state.skor_tablosu = st.data_editor(st.session_state.skor_tablosu, use_container_width=True)
+        # Editörü geçici bir değişkene alıyoruz
+        edited_df = st.data_editor(st.session_state.skor_tablosu, use_container_width=True)
+        # Kaydet butonu ile veriyi işliyoruz
+        if st.button("✅ Skorları Kaydet"):
+            st.session_state.skor_tablosu = edited_df
+            st.rerun()
     else:
         st.info("Henüz grup oluşturmadınız.")
 
@@ -60,7 +64,6 @@ with tab3:
     if not st.session_state.skor_tablosu.empty:
         df = st.session_state.skor_tablosu.copy()
         
-        # Oyun skorları hesaplama
         df['T1_Oyun'] = df['1.Set T1'] + df['2.Set T1'] + df['3.Set T1']
         df['T2_Oyun'] = df['1.Set T2'] + df['2.Set T2'] + df['3.Set T2']
         
@@ -79,7 +82,6 @@ with tab3:
         seriler['T1_Win'] = (seriler['T1_Match_Win'] >= 2).astype(int)
         seriler['T2_Win'] = (seriler['T2_Match_Win'] >= 2).astype(int)
         
-        # T1 ve T2 İstatistiklerini Toplama
         t1 = seriler[['Grup', 'Takım 1', 'T1_Win', 'T1_Match_Win', 'T2_Match_Win', 'T1_Set_Skor', 'T2_Set_Skor', 'T1_Oyun', 'T2_Oyun']]
         t1.columns = ['Grup', 'Takım', 'Galibiyet', 'Aldığı Maç', 'Verdiği Maç', 'Aldığı Set', 'Verdiği Set', 'Aldığı Oyun', 'Verdiği Oyun']
         
@@ -93,7 +95,6 @@ with tab3:
         
         for grup in tum_stats['Grup'].unique():
             st.markdown(f"### 🏆 {grup} Puan Durumu")
-            # İndeksleri 1'den başlatarak göster
             grup_df = tum_stats[tum_stats['Grup'] == grup].drop(columns=['Grup']).sort_values(by=['Galibiyet', 'Maç Av.', 'Oyun Av.'], ascending=False)
             grup_df.index = range(1, len(grup_df) + 1)
             st.dataframe(grup_df, use_container_width=True)
