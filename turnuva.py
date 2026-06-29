@@ -1,90 +1,114 @@
 import streamlit as st
 import pandas as pd
 
-# 1. Sayfa konfigürasyonu (MUTLAKA EN ÜSTTE OLMALI)
-st.set_page_config(page_title="Turnuva Yonetimi", layout="wide")
-
+# Sayfa başlığı ve geniş ekran düzeni
+st.set_page_config(page_title="Turnuva Sistemi", layout="wide")
 st.title("🎾 Dinamik Turnuva Yönetim Sistemi")
-st.write("Skorları güncelledikçe grup sıralamaları otomatik olarak hesaplanır.")
 
-# 2. Şablon Veri Kümesi (İlk açılış için temiz veri)
-varsayilan_maclar = [
-    {"Grup": "ERKEK A GRUBU", "Takim 1": "ATAK PRO SPOR", "Takim 2": "NEW GEN SPOR", "T1 Mac": 1, "T2 Mac": 0, "T1 Set": 2, "T2 Set": 0, "T1 Oyun": 12, "T2 Oyun": 4, "Galibiyet": "ATAK PRO SPOR"},
-    {"Grup": "ERKEK A GRUBU", "Takim 1": "TOPSPIN TENIS", "Takim 2": "TOPSPIN KONUTKENT", "T1 Mac": 0, "T2 Mac": 1, "T1 Set": 0, "T2 Set": 2, "T1 Oyun": 3, "T2 Oyun": 12, "Galibiyet": "TOPSPIN KONUTKENT"},
-    {"Grup": "KADIN B GRUBU", "Takim 1": "ODTU SPOR KULÜBU", "Takim 2": "INCEK TENIS", "T1 Mac": 1, "T2 Mac": 0, "T1 Set": 2, "T2 Set": 0, "T1 Oyun": 12, "T2 Oyun": 0, "Galibiyet": "ODTU SPOR KULÜBU"}
-]
+# Sekmeleri (Tab) oluşturuyoruz
+sekme_veri_girisi, sekme_siralamalar = st.tabs(["✍️ Skor Giriş Ekranı", "🏆 Grup Sıralamaları"])
 
-# Hafıza kontrolü
-if 'mac_tablosu' not in st.session_state:
-    st.session_state.mac_tablosu = pd.DataFrame(varsayilan_maclar)
+# Sistemin boş kalmaması için varsayılan bir şablon oluşturuyoruz
+# (Kullanıcı bu verileri web üzerinden silip kendi verilerini yazabilir)
+if 'skor_verisi' not in st.session_state:
+    st.session_state.skor_verisi = pd.DataFrame({
+        "Grup": ["ERKEK A GRUBU", "KADIN B GRUBU"],
+        "Gün": ["1. Gün", "2. Gün"],
+        "Eşleşme": ["1 ve 4", "2 ve 4"],
+        "Branş": ["1. Tekler", "1. Tekler"],
+        "Takım 1": ["ATAK PRO SPOR KULÜBÜ", "ORTADOĞU TEKNİK ÜNİVERSİTESİ"],
+        "Takım 2": ["NEW GEN SPOR KULÜBÜ", "İNCEK TENİS SPOR KULÜBÜ"],
+        "T1 Kazanılan Maç": [1, 1],
+        "T2 Kazanılan Maç": [0, 0],
+        "T1 Kazanılan Set": [2, 2],
+        "T2 Kazanılan Set": [0, 0],
+        "T1 Kazanılan Oyun": [12, 12],
+        "T2 Kazanılan Oyun": [4, 0],
+        "Tie Kazananı (Galibiyet)": ["ATAK PRO SPOR KULÜBÜ", "ORTADOĞU TEKNİK ÜNİVERSİTESİ"]
+    })
 
-# 3. Sekmelerin Oluşturulması
-sekme_giris, sekme_rapor = st.tabs(["✍️ Skor Giriş Ekranı", "🏆 Grup Sıralamaları"])
-
-# --- SEKME 1: VERİ GİRİŞİ ---
-with sekme_giris:
-    st.subheader("Maç Skorlarını Buradan Düzenleyin")
-    st.caption("Yeni satır eklemek için tablonun altındaki '+' butonunu kullanabilir veya hücrelere çift tıklayarak verileri değiştirebilirsiniz.")
+# --- 1. SEKME: DİNAMİK VERİ GİRİŞİ ---
+with sekme_veri_girisi:
+    st.subheader("Skor ve Eşleşme Giriş Tablosu")
+    st.info("💡 Tablodaki hücrelere çift tıklayarak verileri değiştirebilirsiniz. Yeni maç eklemek için tablonun en altındaki boş satırı kullanın.")
     
-    # Güvenli veri editörü
-    guncel_df = st.data_editor(
-        st.session_state.mac_tablosu,
-        num_rows="dynamic",
+    # st.data_editor ile Excel benzeri dinamik tablo oluşturuyoruz
+    guncel_veri = st.data_editor(
+        st.session_state.skor_verisi, 
+        num_rows="dynamic", # Yeni satır eklemeye izin ver
         use_container_width=True,
-        key="editor_sepeti"
+        height=400
     )
-    # Hafızayı güncelle
-    st.session_state.mac_tablosu = guncel_df
+    
+    # Kullanıcının girdiği güncel veriyi sisteme kaydediyoruz
+    st.session_state.skor_verisi = guncel_veri
 
-# --- SEKME 2: SIRALAMALAR ---
-with sekme_rapor:
-    st.subheader("Anlık Puan Durumu ve Sıralama")
+    # İstenirse tüm girişleri bilgisayara indirme butonu
+    st.download_button(
+        label="Skor Girişlerini Bilgisayara İndir (CSV)",
+        data=guncel_veri.to_csv(index=False).encode('utf-8'),
+        file_name='Skor_Girisleri.csv',
+        mime='text/csv',
+    )
+
+
+# --- 2. SEKME: GRUP SIRALAMALARI ---
+with sekme_siralamalar:
+    st.subheader("Güncel Grup Sıralamaları")
     
-    df_hesap = guncel_df.copy()
-    # Boş bırakılan satırları filtrele
-    df_hesap = df_hesap.dropna(subset=['Takim 1', 'Takim 2'])
+    # Veri girişindeki dataframe'i alıp hesaplama yapıyoruz
+    df = guncel_veri.copy()
     
-    if df_hesap.empty:
-        st.warning("Görüntülenecek maç sonucu bulunamadı.")
+    # Boş girilmiş satırları temizle
+    df = df.dropna(subset=['Takım 1', 'Takım 2'])
+
+    if df.empty:
+        st.warning("Henüz hesaplanacak bir veri yok. Lütfen 'Skor Giriş Ekranı' sekmesinden veri giriniz.")
     else:
-        # Sayısal alanları garantiye al
-        for col in ['T1 Mac', 'T2 Mac', 'T1 Set', 'T2 Set', 'T1 Oyun', 'T2 Oyun']:
-            df_hesap[col] = pd.to_numeric(df_hesap[col], errors='coerce').fillna(0)
+        try:
+            # Sütunların doğru formatta (sayı) olduğundan emin olalım
+            sayisal_sutunlar = ['T1 Kazanılan Maç', 'T2 Kazanılan Maç', 'T1 Kazanılan Set', 'T2 Kazanılan Set', 'T1 Kazanılan Oyun', 'T2 Kazanılan Oyun']
+            for col in sayisal_sutunlar:
+                df[col] = pd.to_numeric(df[col], errors='coerce').fillna(0)
+
+            # Takım 1 İstatistikleri
+            t1_stats = df[['Grup', 'Takım 1', 'T1 Kazanılan Maç', 'T2 Kazanılan Maç', 
+                           'T1 Kazanılan Set', 'T2 Kazanılan Set', 'T1 Kazanılan Oyun', 'T2 Kazanılan Oyun', 'Tie Kazananı (Galibiyet)']].copy()
+            t1_stats.columns = ['Grup', 'Takım Adı', 'Aldığı Maç', 'Verdiği Maç', 'Aldığı Set', 'Verdiği Set', 'Aldığı Oyun', 'Verdiği Oyun', 'Galibiyet']
+            t1_stats['Galibiyet'] = (t1_stats['Galibiyet'] == t1_stats['Takım Adı']).astype(int)
+
+            # Takım 2 İstatistikleri
+            t2_stats = df[['Grup', 'Takım 2', 'T2 Kazanılan Maç', 'T1 Kazanılan Maç', 
+                           'T2 Kazanılan Set', 'T1 Kazanılan Set', 'T2 Kazanılan Oyun', 'T1 Kazanılan Oyun', 'Tie Kazananı (Galibiyet)']].copy()
+            t2_stats.columns = ['Grup', 'Takım Adı', 'Aldığı Maç', 'Verdiği Maç', 'Aldığı Set', 'Verdiği Set', 'Aldığı Oyun', 'Verdiği Oyun', 'Galibiyet']
+            t2_stats['Galibiyet'] = (t2_stats['Galibiyet'] == t2_stats['Takım Adı']).astype(int)
+
+            # Birleştir, Topla ve Averajları Hesapla
+            all_stats = pd.concat([t1_stats, t2_stats], ignore_index=True)
+            siralama = all_stats.groupby(['Grup', 'Takım Adı']).sum().reset_index()
+
+            siralama['Maç Averajı'] = siralama['Aldığı Maç'] - siralama['Verdiği Maç']
+            siralama['Set Averajı'] = siralama['Aldığı Set'] - siralama['Verdiği Set']
+            siralama['Oyun Averajı'] = siralama['Aldığı Oyun'] - siralama['Verdiği Oyun']
+
+            siralama = siralama.sort_values(
+                by=['Grup', 'Galibiyet', 'Maç Averajı', 'Set Averajı', 'Oyun Averajı'], 
+                ascending=[True, False, False, False, False]
+            )
             
-        # Takım 1 Penceresi
-        t1 = df_hesap[['Grup', 'Takim 1', 'T1 Mac', 'T2 Mac', 'T1 Set', 'T2 Set', 'T1 Oyun', 'T2 Oyun', 'Galibiyet']].copy()
-        t1.columns = ['Grup', 'Takım', 'OMac', 'VMac', 'OSet', 'VSet', 'OOyun', 'VOyun', 'Galibiyet_Adayi']
-        t1['Galibiyet Puanı'] = (t1['Galibiyet_Adayi'] == t1['Takım']).astype(int)
-        
-        # Takım 2 Penceresi
-        t2 = df_hesap[['Grup', 'Takim 2', 'T2 Mac', 'T1 Mac', 'T2 Set', 'T1 Set', 'T2 Oyun', 'T1 Oyun', 'Galibiyet']].copy()
-        t2.columns = ['Grup', 'Takım', 'OMac', 'VMac', 'OSet', 'VSet', 'OOyun', 'VOyun', 'Galibiyet_Adayi']
-        t2['Galibiyet Puanı'] = (t2['Galibiyet_Adayi'] == t2['Takım']).astype(int)
-        
-        # Birleştirme ve Gruplama
-        birlikte = pd.concat([t1, t2], ignore_index=True)
-        puan_durumu = birlikte.groupby(['Grup', 'Takım']).sum(numeric_only=True).reset_index()
-        
-        # Averaj Hesapları
-        puan_durumu['Maç Averajı'] = puan_durumu['OMac'] - puan_durumu['VMac']
-        puan_durumu['Set Averajı'] = puan_durumu['OSet'] - puan_durumu['VSet']
-        puan_durumu['Oyun Averajı'] = puan_durumu['OOyun'] - puan_durumu['VOyun']
-        
-        # Sıralama Kuralları
-        puan_durumu = puan_durumu.sort_values(
-            by=['Grup', 'Galibiyet Puanı', 'Maç Averajı', 'Set Averajı', 'Oyun Averajı'],
-            ascending=[True, False, False, False, False]
-        )
-        
-        # Gösterim Sütunlarını Düzenle
-        puan_durumu = puan_durumu[[
-            'Grup', 'Galibiyet Puanı', 'Takım', 'OMac', 'VMac', 'Maç Averajı',
-            'OSet', 'VSet', 'Set Averajı', 'OOyun', 'VOyun', 'Oyun Averajı'
-        ]]
-        
-        # Gruplara Göre Tabloları Bölerek Göster
-        for grup_ismi in puan_durumu['Grup'].unique():
-            st.markdown(f"### 🏆 {grup_ismi}")
-            grup_df = puan_durumu[puan_durumu['Grup'] == grup_ismi].drop(columns=['Grup']).reset_index(drop=True)
-            grup_df.index = grup_df.index + 1  # 1'den başlasın
-            st.dataframe(grup_df, use_container_width=True)
+            siralama = siralama[['Grup', 'Galibiyet', 'Takım Adı', 'Aldığı Maç', 'Verdiği Maç', 'Maç Averajı', 
+                                 'Aldığı Set', 'Verdiği Set', 'Set Averajı', 'Aldığı Oyun', 'Verdiği Oyun', 'Oyun Averajı']]
+
+            # Bütün grupları tek bir karmaşık tablo yapmak yerine, gruplara ayırarak gösterelim
+            gruplar = siralama['Grup'].unique()
+            
+            for grup_adi in gruplar:
+                st.markdown(f"### 🏆 {grup_adi}")
+                grup_verisi = siralama[siralama['Grup'] == grup_adi].drop(columns=['Grup']).reset_index(drop=True)
+                # İndeksleri 1'den başlatarak sırayı göster
+                grup_verisi.index = grup_verisi.index + 1
+                st.dataframe(grup_verisi, use_container_width=True)
+                st.markdown("---")
+
+        except Exception as e:
+            st.error(f"Sıralama hesaplanırken bir sorun oluştu. Lütfen Skor Giriş tablosunda sayı girilmesi gereken yerlere harf yazmadığınızdan emin olun. Hata: {e}")
