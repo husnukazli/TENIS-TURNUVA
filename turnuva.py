@@ -6,15 +6,32 @@ st.set_page_config(page_title="Tenis Turnuva Otomasyonu", layout="wide")
 st.title("🎾 Profesyonel Tenis Turnuva Yönetim Sistemi")
 
 # --- 1. OTOMASYON MOTORU ---
-def eslesmeleri_olustur(grup_adi, takimlar):
-    base_matches = [
-        {"Gün": "1. Gün", "Eşleşme": "1 ve 4", "Takım 1": takimlar[0], "Takım 2": takimlar[3]},
-        {"Gün": "1. Gün", "Eşleşme": "2 ve 3", "Takım 1": takimlar[1], "Takım 2": takimlar[2]},
-        {"Gün": "2. Gün", "Eşleşme": "1 ve 3", "Takım 1": takimlar[0], "Takım 2": takimlar[2]},
-        {"Gün": "2. Gün", "Eşleşme": "2 ve 4", "Takım 1": takimlar[1], "Takım 2": takimlar[3]},
-        {"Gün": "3. Gün", "Eşleşme": "1 ve 2", "Takım 1": takimlar[0], "Takım 2": takimlar[1]},
-        {"Gün": "3. Gün", "Eşleşme": "3 ve 4", "Takım 1": takimlar[2], "Takım 2": takimlar[3]},
-    ]
+def eslesmeleri_olustur(grup_adi, takimlar, grup_tipi):
+    if grup_tipi == "4'lü Grup":
+        # ESKİ ÇALIŞAN KODUNUZ (Aynen Korundu)
+        base_matches = [
+            {"Gün": "1. Gün", "Eşleşme": "1 ve 4", "Takım 1": takimlar[0], "Takım 2": takimlar[3]},
+            {"Gün": "1. Gün", "Eşleşme": "2 ve 3", "Takım 1": takimlar[1], "Takım 2": takimlar[2]},
+            {"Gün": "2. Gün", "Eşleşme": "1 ve 3", "Takım 1": takimlar[0], "Takım 2": takimlar[2]},
+            {"Gün": "2. Gün", "Eşleşme": "2 ve 4", "Takım 1": takimlar[1], "Takım 2": takimlar[3]},
+            {"Gün": "3. Gün", "Eşleşme": "1 ve 2", "Takım 1": takimlar[0], "Takım 2": takimlar[1]},
+            {"Gün": "3. Gün", "Eşleşme": "3 ve 4", "Takım 1": takimlar[2], "Takım 2": takimlar[3]},
+        ]
+    else:
+        # YENİ 5'Lİ GRUP KODUNUZ
+        base_matches = [
+            {"Gün": "1. Gün", "Eşleşme": "2 ve 5", "Takım 1": takimlar[1], "Takım 2": takimlar[4]},
+            {"Gün": "1. Gün", "Eşleşme": "3 ve 4", "Takım 1": takimlar[2], "Takım 2": takimlar[3]},
+            {"Gün": "2. Gün", "Eşleşme": "1 ve 5", "Takım 1": takimlar[0], "Takım 2": takimlar[4]},
+            {"Gün": "2. Gün", "Eşleşme": "2 ve 3", "Takım 1": takimlar[1], "Takım 2": takimlar[2]},
+            {"Gün": "3. Gün", "Eşleşme": "1 ve 4", "Takım 1": takimlar[0], "Takım 2": takimlar[3]},
+            {"Gün": "3. Gün", "Eşleşme": "3 ve 5", "Takım 1": takimlar[2], "Takım 2": takimlar[4]},
+            {"Gün": "4. Gün", "Eşleşme": "1 ve 3", "Takım 1": takimlar[0], "Takım 2": takimlar[2]},
+            {"Gün": "4. Gün", "Eşleşme": "2 ve 4", "Takım 1": takimlar[1], "Takım 2": takimlar[3]},
+            {"Gün": "5. Gün", "Eşleşme": "1 ve 2", "Takım 1": takimlar[0], "Takım 2": takimlar[1]},
+            {"Gün": "5. Gün", "Eşleşme": "4 ve 5", "Takım 1": takimlar[3], "Takım 2": takimlar[4]},
+        ]
+
     program = []
     for m in base_matches:
         for brans in ["1. Tekler", "2. Tekler", "Çiftler"]:
@@ -34,19 +51,28 @@ tab1, tab2, tab3, tab4 = st.tabs(["👥 1. Grup Ayarları", "✍️ 2. Skor Giri
 
 with tab1:
     st.subheader("Grup Takımlarını Seç ve Eşleşmeleri Oluştur")
+    
+    # --- YENİ SEÇİM ALANI ---
+    grup_tipi = st.radio("Kurulacak Grup Tipini Seçin:", ["4'lü Grup", "5'li Grup"], horizontal=True)
+    
     grup_adi = st.text_input("Grup Adı")
-    takim_listesi = st.text_area("Takımları Alt Alta Yaz (4 Takım Olmalı)")
+    
+    # Dinamik yönlendirme mesajı
+    beklenen_sayi = 4 if grup_tipi == "4'lü Grup" else 5
+    takim_listesi = st.text_area(f"Takımları Alt Alta Yaz (Tam olarak {beklenen_sayi} Takım Olmalı)")
+    
     if st.button("🚀 Eşleşmeleri Oluştur"):
         takimlar = [t.strip() for t in takim_listesi.split('\n') if t.strip()]
-        if len(takimlar) == 4:
-            yeni_maclar = eslesmeleri_olustur(grup_adi, takimlar)
+        
+        if len(takimlar) == beklenen_sayi:
+            yeni_maclar = eslesmeleri_olustur(grup_adi, takimlar, grup_tipi)
             yeni_df = pd.DataFrame(yeni_maclar)
             st.session_state.skor_tablosu = pd.concat([st.session_state.skor_tablosu, yeni_df], ignore_index=True)
             st.session_state.skor_tablosu.index = range(1, len(st.session_state.skor_tablosu) + 1)
-            st.success("Eşleşmeler oluşturuldu!")
+            st.success(f"Eşleşmeler {grup_tipi} modeline göre başarıyla oluşturuldu!")
             st.rerun()
         else:
-            st.error("Lütfen tam olarak 4 takım girin.")
+            st.error(f"Hata: Seçtiğiniz grup tipi için {beklenen_sayi} takım girmelisiniz. (Şu an girilen: {len(takimlar)})")
 
 with tab2:
     st.subheader("Maç Skorlarını Girin")
@@ -57,11 +83,18 @@ with tab2:
         df_grup = st.session_state.skor_tablosu[st.session_state.skor_tablosu['Grup'] == secilen_grup].copy()
         edited_dfs = {}
         
-        for gun in ["1. Gün", "2. Gün", "3. Gün"]:
+        # DİNAMİK GÜN HESAPLAMA: Seçilen grupta kaç gün varsa (3 veya 5) sadece onları listeler
+        def gun_sirala(gun_adi):
+            try: return int(gun_adi.split('.')[0])
+            except: return 99
+            
+        aktif_gunler = sorted(df_grup['Gün'].unique(), key=gun_sirala)
+        
+        for gun in aktif_gunler:
             st.markdown(f"### {gun}")
             df_gun = df_grup[df_grup['Gün'] == gun]
             if not df_gun.empty:
-                edited_dfs[gun] = st.data_editor(df_gun, use_container_width=True, key=f"editor_{gun}")
+                edited_dfs[gun] = st.data_editor(df_gun, use_container_width=True, key=f"editor_{secilen_grup}_{gun}")
         
         if st.button("✅ Tüm Skorları Kaydet"):
             all_edited = pd.concat(edited_dfs.values())
@@ -105,7 +138,6 @@ with tab3:
 with tab4:
     st.subheader("⚙️ Yönetim Paneli")
     
-    # DOSYA İLE YEDEKLEME SİSTEMİ
     st.markdown("### 📁 Veri Dosyası İşlemleri")
     col1, col2 = st.columns(2)
     
