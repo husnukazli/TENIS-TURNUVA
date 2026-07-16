@@ -75,7 +75,7 @@ with st.sidebar:
     if not st.session_state.admin_mi:
         girilen_sifre = st.text_input("Yönetici Şifresi:", type="password")
         if st.button("🔒 Giriş Yap"):
-            if girilen_sifre == "zonguldak2026":
+            if girilen_sifre == "gsumer":
                 st.session_state.admin_mi = True
                 st.success("✅ Başhakem Yetkisi Aktif!")
                 st.rerun()
