@@ -3,151 +3,141 @@ import pandas as pd
 import random
 import string
 from veritabani_islemleri import ortak_veriyi_kaydet
-# Eğer fikstür oluşturma fonksiyonun hesaplama_motoru'ndaysa buradaki yorumu kaldırabilirsin:
-# from hesaplama_motoru import fikstur_olustur 
+from hesaplama_motoru import eslesmeleri_olustur
 
-def admin_paneli_goster():
-    st.title("⚙️ Başhakem (Admin) Yönetim Paneli")
-
-    # --- SİSTEM KONTROLÜ (SOL MENÜ) ---
-    st.sidebar.markdown("---")
-    st.sidebar.subheader("🔴 Sistem Kontrolü")
-    sistem_kapali = st.sidebar.checkbox(
-        "Sistemi Bakıma Al (Kullanıcı Girişini Kapat)", 
-        value=st.session_state.get('sistem_kapali', False)
-    )
-    if sistem_kapali != st.session_state.get('sistem_kapali', False):
-        st.session_state.sistem_kapali = sistem_kapali
-        st.success("Sistem durumu güncellendi. (Sayfa yenilendiğinde aktif olur)")
-
-    # --- SEKMELER ---
-    sekme1, sekme2, sekme3, sekme4 = st.tabs([
-        "📥 Takım Yükle", "🏆 Grup Oluştur", "📅 Takvim", "🔑 PIN Yönetimi"
-    ])
-
-    # ---------------------------------------------------------
-    # 1. SEKME: EXCEL'DEN TAKIM YÜKLEME (Sadeleştirilmiş)
-    # ---------------------------------------------------------
-    with sekme1:
-        st.subheader("Excel ile Takım Havuzu Oluştur")
-        st.info("Sadece Erkekler veya Kadınlar kategorisini seçerek takımları sisteme aktarın. Yaş kategorisi uygulaması kaldırılmıştır.")
-        
-        kategori = st.selectbox("Turnuva Kategorisi Seçin", ["Erkekler", "Kadınlar"])
-        yuklenen_dosya = st.file_uploader(f"{kategori} için Excel Dosyası Seçin", type=["xlsx", "xls"])
+def grup_ayarlari_ciz(aktif_asama):
+    st.subheader(f"⚙️ {aktif_asama} - Grup ve Fikstür Yönetimi")
+    st.info("Tüm gruplar varsayılan olarak 3 maçlık (2 Tek, 1 Çift) standart formata göre oluşturulur.")
+    
+    tab1, tab2 = st.tabs(["📥 Takım Havuzu & Excel Yükle", "🏆 Grup Oluştur & Fikstür Çek"])
+    
+    with tab1:
+        st.markdown("### Excel ile Takım Yükleme")
+        kategori = st.selectbox("Kategori Seçin", ["Erkekler", "Kadınlar"], key="excel_kat_sec")
+        yuklenen_dosya = st.file_uploader(f"{kategori} için Excel Dosyası Seçin", type=["xlsx", "xls"], key="excel_up_admin")
         
         if yuklenen_dosya is not None:
             try:
                 df = pd.read_excel(yuklenen_dosya)
-                # Excel'de 'Takım Adı' adında bir sütun olduğunu varsayıyoruz
                 if 'Takım Adı' not in df.columns:
-                    st.error("Excel dosyasında 'Takım Adı' adında bir sütun bulunamadı!")
+                    st.error("Excel dosyasında 'Takım Adı' sütunu bulunamadı!")
                 else:
-                    st.dataframe(df.head()) # Önizleme
-                    
-                    if st.button("Takımları Havuza Ekle"):
-                        eklenen_sayi = 0
-                        for index, row in df.iterrows():
-                            takim_adi = str(row['Takım Adı']).strip()
-                            if takim_adi and takim_adi.lower() != "nan":
-                                if takim_adi not in st.session_state.takim_havuzu:
-                                    st.session_state.takim_havuzu[takim_adi] = []
-                                st.session_state.havuz_kategorileri[takim_adi] = kategori
-                                eklenen_sayi += 1
-                        
+                    st.dataframe(df.head())
+                    if st.button("Takımları Havuza Kaydet", key="btn_havuz_kaydet"):
+                        eklenen = 0
+                        for _, row in df.iterrows():
+                            t_adi = str(row['Takım Adı']).strip()
+                            if t_adi and t_adi.lower() != "nan":
+                                if t_adi not in st.session_state.takim_havuzu:
+                                    st.session_state.takim_havuzu[t_adi] = []
+                                st.session_state.havuz_kategorileri[t_adi] = kategori
+                                eklenen += 1
                         ortak_veriyi_kaydet()
-                        st.success(f"{eklenen_sayi} adet {kategori} takımı başarıyla havuza eklendi!")
-                        
+                        st.success(f"{eklenen} takım başarıyla havuza eklendi!")
             except Exception as e:
-                st.error(f"Excel okunurken bir hata oluştu: {e}")
-
-        # Mevcut Havuzu Göster
-        with st.expander("Mevcut Takım Havuzunu Gör"):
-            havuz_df = pd.DataFrame(
-                list(st.session_state.havuz_kategorileri.items()), 
-                columns=["Takım Adı", "Kategori"]
-            )
-            st.dataframe(havuz_df)
-
-    # ---------------------------------------------------------
-    # 2. SEKME: GRUP OLUŞTURMA (3 Maçlık Format ve Esnek Seçim)
-    # ---------------------------------------------------------
-    with sekme2:
-        st.subheader("Grup ve Fikstür Oluştur")
-        st.markdown("**Not:** Tüm gruplar varsayılan olarak 3 maçlık (2 Tek, 1 Çift) seriler halinde kurulur.")
-        
-        grup_adi = st.text_input("Grup Adı (Örn: Erkekler A Grubu)")
-        grup_kategorisi = st.selectbox("Grubun Kategorisi", ["Erkekler", "Kadınlar"], key="grup_kat")
-        asama_secimi = st.selectbox("Aşama (1. Aşama veya Play-off)", ["1. Aşama (Grup Maçları)", "2. Aşama (Final / Sıralama)"])
-        
-        # Başhakem havuzdaki tüm o kategori takımlarını kısıtlamasız görebilir
-        uygun_takimlar = [t for t, kat in st.session_state.havuz_kategorileri.items() if kat == grup_kategorisi]
-        secilen_takimlar = st.multiselect("Gruba Eklenecek Takımları Seçin", uygun_takimlar)
-        
-        if st.button("Grubu Kaydet ve Fikstür Çek"):
-            if grup_adi and secilen_takimlar and len(secilen_takimlar) > 1:
-                st.session_state.grup_formatlari[grup_adi] = "3 Maç (2 Tek, 1 Çift)" # Sabit Format
-                st.session_state.grup_kategorileri[grup_adi] = grup_kategorisi
-                st.session_state.grup_asamalari[grup_adi] = asama_secimi
+                st.error(f"Hata: {e}")
                 
-                # Fikstür motorunu burada çağırıyoruz (Varsa kendi algoritmanı bağla)
-                # fikstur_olustur(grup_adi, secilen_takimlar)
-                
-                ortak_veriyi_kaydet()
-                st.success(f"{grup_adi} başarıyla oluşturuldu! (Format: 3 Maç)")
+        with st.expander("Mevcut Takım Havuzu"):
+            if st.session_state.havuz_kategorileri:
+                havuz_df = pd.DataFrame(list(st.session_state.havuz_kategorileri.items()), columns=["Takım Adı", "Kategori"])
+                st.dataframe(havuz_df, use_container_width=True)
             else:
-                st.warning("Lütfen grup adını girin ve en az 2 takım seçin.")
+                st.info("Havuzda henüz takım yok.")
 
-    # ---------------------------------------------------------
-    # 3. SEKME: TAKVİM VE PROGRAM (Tarih Atama)
-    # ---------------------------------------------------------
-    with sekme3:
-        st.subheader("Maç Tarihlerini Belirle")
-        if not st.session_state.mac_programi.empty:
-            st.dataframe(st.session_state.mac_programi)
-            # Burada mevcut maçlara tarih/saat atama arayüzü eklenebilir.
-            st.info("Fikstür oluştuktan sonra maçlara kort ve saat ataması buradan yapılacaktır.")
-        else:
-            st.info("Henüz oluşturulmuş bir fikstür bulunmuyor.")
-
-    # ---------------------------------------------------------
-    # 4. SEKME: PIN YÖNETİMİ (Kaptanlar ve Hakemler için)
-    # ---------------------------------------------------------
-    with sekme4:
-        st.subheader("Güvenlik ve PIN Yönetimi")
+    with tab2:
+        st.markdown("### Grup ve Fikstür Tanımlama")
+        grup_adi = st.text_input("Grup Adı (Örn: Erkekler A Grubu)", key="input_grup_adi")
+        g_kat = st.selectbox("Grup Kategorisi", ["Erkekler", "Kadınlar"], key="grup_kat_secim")
         
-        kolon1, kolon2 = st.columns(2)
+        uygun_takimlar = [t for t, kat in st.session_state.havuz_kategorileri.items() if kat == g_kat]
+        secilen_takimlar = st.multiselect("Gruba Eklenecek Takımları Seçin", uygun_takimlar, key="grup_takimlar_ms")
         
-        with kolon1:
-            st.markdown("**Kaptan PIN'leri (Esame Girişi İçin)**")
-            if st.button("Kaptan PIN'lerini Üret/Yenile"):
-                for takim in st.session_state.takim_havuzu.keys():
-                    # 6 Haneli Rastgele Alfanümerik PIN
-                    pin = ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
-                    st.session_state.takim_pinleri[takim] = pin
-                ortak_veriyi_kaydet()
-                st.success("Tüm takımlar için yeni Kaptan PIN'leri üretildi.")
+        if st.button("Grubu Kaydet ve Fikstür Oluştur", type="primary", key="btn_grup_olustur"):
+            if grup_adi and len(secilen_takimlar) >= 2:
+                st.session_state.grup_formatlari[grup_adi] = "3 Maç (2 Tek, 1 Çift)"
+                st.session_state.grup_kategorileri[grup_adi] = g_kat
+                st.session_state.grup_asamalari[grup_adi] = aktif_asama
                 
-            if st.session_state.takim_pinleri:
-                pin_df = pd.DataFrame(
-                    list(st.session_state.takim_pinleri.items()), 
-                    columns=["Takım", "PIN Şifresi"]
-                )
-                st.dataframe(pin_df)
+                n = len(secilen_takimlar)
+                if n == 2: g_tipi = "2'li Grup"
+                elif n == 3: g_tipi = "3'lü Grup"
+                elif n == 4: g_tipi = "4'lü Grup"
+                elif n == 5: g_tipi = "5'li Grup"
+                else: g_tipi = "6'lı Grup"
                 
-        with kolon2:
-            st.markdown("**Hakem PIN'leri (Skor Girişi İçin)**")
-            yeni_hakem = st.text_input("Yeni Hakem Adı Ekle")
-            if st.button("Hakem Ekle ve PIN Üret"):
-                if yeni_hakem and yeni_hakem not in st.session_state.hakem_listesi:
-                    st.session_state.hakem_listesi.append(yeni_hakem)
-                    pin = ''.join(random.choices(string.digits, k=4)) # 4 Haneli sayısal
-                    st.session_state.hakem_pinleri[yeni_hakem] = pin
-                    ortak_veriyi_kaydet()
-                    st.success(f"{yeni_hakem} sisteme eklendi.")
+                program = eslesmeleri_olustur(grup_adi, secilen_takimlar, g_tipi, "3 Maçlık (2 Tek, 1 Çift)")
+                yeni_df = pd.DataFrame(program)
+                
+                if st.session_state.skor_tablosu.empty:
+                    st.session_state.skor_tablosu = yeni_df
+                else:
+                    st.session_state.skor_tablosu = pd.concat([st.session_state.skor_tablosu, yeni_df], ignore_index=True)
                     
-            if st.session_state.hakem_pinleri:
-                h_pin_df = pd.DataFrame(
-                    list(st.session_state.hakem_pinleri.items()), 
-                    columns=["Hakem Adı", "PIN"]
-                )
-                st.dataframe(h_pin_df)
+                ortak_veriyi_kaydet()
+                st.success(f"{grup_adi} ve fikstürü başarıyla oluşturuldu!")
+                st.rerun()
+            else:
+                st.warning("Lütfen geçerli bir grup adı girin ve en az 2 takım seçin.")
+
+def hakem_yonetimi_ciz():
+    st.subheader("👮‍♂️ Hakem Yönetimi ve PIN Paneli")
+    yeni_hakem = st.text_input("Yeni Hakem Adı Soyadı", key="input_yeni_hakem")
+    if st.button("Hakem Ekle ve PIN Üret", key="btn_hakem_ekle"):
+        if yeni_hakem and yeni_hakem not in st.session_state.hakem_listesi:
+            st.session_state.hakem_listesi.append(yeni_hakem)
+            pin = ''.join(random.choices(string.digits, k=4))
+            st.session_state.hakem_pinleri[yeni_hakem] = pin
+            ortak_veriyi_kaydet()
+            st.success(f"{yeni_hakem} sisteme eklendi. PIN: {pin}")
+            st.rerun()
+            
+    if st.session_state.hakem_pinleri:
+        st.markdown("### Mevcut Hakemler ve PIN'leri")
+        h_df = pd.DataFrame(list(st.session_state.hakem_pinleri.items()), columns=["Hakem Adı", "PIN"])
+        st.dataframe(h_df, use_container_width=True)
+
+def yonetim_ve_dosya_ciz(aktif_asama):
+    st.subheader("⚙️ Sistem Yönetimi ve Veri Kontrolü")
+    st.info("GitHub tabanlı JSON veritabanı yönetim araçları.")
+    
+    if st.button("🔄 Verileri GitHub ile Senkronize Et", key="btn_github_sync"):
+        ortak_veriyi_kaydet()
+        st.success("Tüm veriler GitHub deposuna kaydedildi.")
+        
+    st.markdown("---")
+    if st.button("⚠️ Tüm Verileri Sıfırla (Dikkat!)", type="primary", key="btn_sifirla"):
+        st.session_state.skor_tablosu = pd.DataFrame()
+        st.session_state.mac_programi = pd.DataFrame()
+        st.session_state.takim_kadrolari = {}
+        ortak_veriyi_kaydet()
+        st.success("Sistem sıfırlandı.")
+        st.rerun()
+
+def esame_kontrol_merkezi_ciz():
+    st.subheader("📝 Esame Kontrol Merkezi")
+    st.info("Kaptanlar veya hakemler tarafından kasaya gönderilen esame listelerini buradan onaylayabilirsiniz.")
+    
+    if not st.session_state.esame_kasasi:
+        st.info("Şu an kasada bekleyen esame bulunmuyor.")
+    else:
+        for match_key, takimlar_dict in list(st.session_state.esame_kasasi.items()):
+            st.markdown(f"**Eşleşme Anahtarı:** `{match_key}`")
+            is_onayli = st.session_state.esame_onayli.get(match_key, False)
+            
+            for takim_adi, kadro_data in takimlar_dict.items():
+                kaynak = kadro_data.get("_kaynak", "Kaptan")
+                st.write(f"- **{takim_adi}** ({kaynak} Bildirimi):")
+                for brans, oyuncu in kadro_data.items():
+                    if not brans.startswith("_"):
+                        st.caption(f"  * {brans}: {oyuncu}")
+                        
+            col_onay, col_red = st.columns(2)
+            if not is_onayli:
+                if col_onay.button(f"✅ Onayla ve Fikstüre Yansit", key=f"onay_{match_key}"):
+                    st.session_state.esame_onayli[match_key] = True
+                    ortak_veriyi_kaydet()
+                    st.success("Esame onaylandı.")
+                    st.rerun()
+            else:
+                st.success("Bu esame onaylanmış durumda.")
+            st.divider()
