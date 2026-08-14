@@ -74,8 +74,7 @@ def hakem_panelini_ciz():
                         match_key = f"{grup_adi}_{gun_val}_{eslesme_adi}"
                         
                         g_kat = st.session_state.grup_kategorileri.get(grup_adi, "")
-                        g_yas = st.session_state.grup_yas_gruplari.get(grup_adi, "")
-                        kat_bilgisi = f"({g_yas} {g_kat})" if g_yas != "Yaş Belirtme" else f"({g_kat})"
+                        kat_bilgisi = f"({g_kat})"
                         
                         is_approved = st.session_state.esame_onayli.get(match_key, False)
                         kasadaki_veri = st.session_state.esame_kasasi.get(match_key, {})
@@ -176,41 +175,19 @@ def hakem_panelini_ciz():
                                                     
                                                     if st.form_submit_button("💾 Kaydet ve 2. Takıma Geç", use_container_width=True, type="primary"):
                                                         hatalar = []
-                                                        format_secimi = st.session_state.grup_formatlari.get(grup_adi, "3 Maçlık (2 Tek, 1 Çift)")
                                                         o1 = form_secimleri_t1.get("1. Tekler")
                                                         o2 = form_secimleri_t1.get("2. Tekler")
-                                                        o3 = form_secimleri_t1.get("3. Tekler")
                                                         r1 = t1_havuz.index(o1) if o1 in t1_havuz else -1
                                                         r2 = t1_havuz.index(o2) if o2 in t1_havuz else -1
-                                                        r3 = t1_havuz.index(o3) if o3 in t1_havuz else -1
                                                         
-                                                        for b in ["1. Çiftler", "2. Çiftler", "Çiftler"]:
-                                                            c_str = form_secimleri_t1.get(b, "")
-                                                            if c_str:
-                                                                c_list = [o.strip() for o in c_str.split(",") if o.strip()]
-                                                                if len(c_list) == 1: hatalar.append(f"❌ {b} maçına tek oyuncu yazılamaz. (Boş bırakabilirsiniz)")
+                                                        c_str = form_secimleri_t1.get("Çiftler", "")
+                                                        if c_str:
+                                                            c_list = [o.strip() for o in c_str.split(",") if o.strip()]
+                                                            if len(c_list) == 1: hatalar.append("❌ Çiftler maçına tek oyuncu yazılamaz. (Boş bırakabilirsiniz)")
                                                                 
                                                         if r1 != -1 and r2 != -1 and r1 >= r2: hatalar.append("❌ 1. Tekler oyuncusu, 2. Teklerden üst sırada olmalıdır.")
-                                                        if r2 != -1 and r3 != -1 and r2 >= r3: hatalar.append("❌ 2. Tekler oyuncusu, 3. Teklerden üst sırada olmalıdır.")
-                                                        if r1 != -1 and r3 != -1 and r2 == -1 and r1 >= r3: hatalar.append("❌ 1. Tekler oyuncusu, 3. Teklerden üst sırada olmalıdır.")
-                                                        
                                                         if o1 and o1 != "Seçiniz" and o1 == o2: hatalar.append("❌ Aynı oyuncu birden fazla tekler maçına yazılamaz.")
-                                                        if o2 and o2 != "Seçiniz" and o2 == o3: hatalar.append("❌ Aynı oyuncu birden fazla tekler maçına yazılamaz.")
-                                                        if o1 and o1 != "Seçiniz" and o1 == o3: hatalar.append("❌ Aynı oyuncu birden fazla tekler maçına yazılamaz.")
                                                         
-                                                        if "5 Maçlık" in format_secimi:
-                                                            c1_list = [o.strip() for o in form_secimleri_t1.get("1. Çiftler", "").split(",") if o.strip()]
-                                                            c2_list = [o.strip() for o in form_secimleri_t1.get("2. Çiftler", "").split(",") if o.strip()]
-                                                            ortak = set(c1_list).intersection(set(c2_list))
-                                                            if ortak: hatalar.append("❌ Aynı oyuncu iki çiftler maçına da yazılamaz.")
-                                                            
-                                                            if len(c1_list) == 2 and len(c2_list) == 2 and not ortak:
-                                                                dortlu = sorted([(p, t1_havuz.index(p)) for p in c1_list + c2_list if p in t1_havuz], key=lambda x: x[1])
-                                                                yeni_rank = {p: i+1 for i, (p, _) in enumerate(dortlu)}
-                                                                t_c1 = yeni_rank.get(c1_list[0], 99) + yeni_rank.get(c1_list[1], 99)
-                                                                t_c2 = yeni_rank.get(c2_list[0], 99) + yeni_rank.get(c2_list[1], 99)
-                                                                if t_c1 > t_c2: hatalar.append("❌ 1. Çiftler, 2. Çiftlerden daha güçlü (veya eşit) olmalıdır.")
-
                                                         if hatalar:
                                                             for h in hatalar: st.error(h)
                                                         else:
@@ -248,41 +225,19 @@ def hakem_panelini_ciz():
                                                     
                                                     if st.form_submit_button("💾 Kaydet ve Eşleşmeleri Göster", use_container_width=True, type="primary"):
                                                         hatalar = []
-                                                        format_secimi = st.session_state.grup_formatlari.get(grup_adi, "3 Maçlık (2 Tek, 1 Çift)")
                                                         o1 = form_secimleri_t2.get("1. Tekler")
                                                         o2 = form_secimleri_t2.get("2. Tekler")
-                                                        o3 = form_secimleri_t2.get("3. Tekler")
                                                         r1 = t2_havuz.index(o1) if o1 in t2_havuz else -1
                                                         r2 = t2_havuz.index(o2) if o2 in t2_havuz else -1
-                                                        r3 = t2_havuz.index(o3) if o3 in t2_havuz else -1
                                                         
-                                                        for b in ["1. Çiftler", "2. Çiftler", "Çiftler"]:
-                                                            c_str = form_secimleri_t2.get(b, "")
-                                                            if c_str:
-                                                                c_list = [o.strip() for o in c_str.split(",") if o.strip()]
-                                                                if len(c_list) == 1: hatalar.append(f"❌ {b} maçına tek oyuncu yazılamaz. (Boş bırakabilirsiniz)")
+                                                        c_str = form_secimleri_t2.get("Çiftler", "")
+                                                        if c_str:
+                                                            c_list = [o.strip() for o in c_str.split(",") if o.strip()]
+                                                            if len(c_list) == 1: hatalar.append("❌ Çiftler maçına tek oyuncu yazılamaz. (Boş bırakabilirsiniz)")
                                                                 
                                                         if r1 != -1 and r2 != -1 and r1 >= r2: hatalar.append("❌ 1. Tekler oyuncusu, 2. Teklerden üst sırada olmalıdır.")
-                                                        if r2 != -1 and r3 != -1 and r2 >= r3: hatalar.append("❌ 2. Tekler oyuncusu, 3. Teklerden üst sırada olmalıdır.")
-                                                        if r1 != -1 and r3 != -1 and r2 == -1 and r1 >= r3: hatalar.append("❌ 1. Tekler oyuncusu, 3. Teklerden üst sırada olmalıdır.")
-                                                        
                                                         if o1 and o1 != "Seçiniz" and o1 == o2: hatalar.append("❌ Aynı oyuncu birden fazla tekler maçına yazılamaz.")
-                                                        if o2 and o2 != "Seçiniz" and o2 == o3: hatalar.append("❌ Aynı oyuncu birden fazla tekler maçına yazılamaz.")
-                                                        if o1 and o1 != "Seçiniz" and o1 == o3: hatalar.append("❌ Aynı oyuncu birden fazla tekler maçına yazılamaz.")
                                                         
-                                                        if "5 Maçlık" in format_secimi:
-                                                            c1_list = [o.strip() for o in form_secimleri_t2.get("1. Çiftler", "").split(",") if o.strip()]
-                                                            c2_list = [o.strip() for o in form_secimleri_t2.get("2. Çiftler", "").split(",") if o.strip()]
-                                                            ortak = set(c1_list).intersection(set(c2_list))
-                                                            if ortak: hatalar.append("❌ Aynı oyuncu iki çiftler maçına da yazılamaz.")
-                                                            
-                                                            if len(c1_list) == 2 and len(c2_list) == 2 and not ortak:
-                                                                dortlu = sorted([(p, t2_havuz.index(p)) for p in c1_list + c2_list if p in t2_havuz], key=lambda x: x[1])
-                                                                yeni_rank = {p: i+1 for i, (p, _) in enumerate(dortlu)}
-                                                                t_c1 = yeni_rank.get(c1_list[0], 99) + yeni_rank.get(c1_list[1], 99)
-                                                                t_c2 = yeni_rank.get(c2_list[0], 99) + yeni_rank.get(c2_list[1], 99)
-                                                                if t_c1 > t_c2: hatalar.append("❌ 1. Çiftler, 2. Çiftlerden daha güçlü (veya eşit) olmalıdır.")
-
                                                         if hatalar:
                                                             for h in hatalar: st.error(h)
                                                         else:
