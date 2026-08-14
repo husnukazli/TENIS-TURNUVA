@@ -222,8 +222,9 @@ def render_html_matrix(takimlar, df_grup):
                         w1, w2 = hesapla_mac_kazanani(row)
                         brans = str(row.get('Branş', '')).lower()
                         is_cift = "çift" in brans
-                        format_secimi = st.session_state.grup_formatlari.get(row['Grup'], "3 Maçlık (2 Tek, 1 Çift)")
-                        w_val = 1.5 if (format_secimi == "5 Maçlık (3 Tek, 2 Çift)" and is_cift) else (2.0 if is_cift else 1.0)
+                        
+                        # MÜDAHALE: Çiftler ekstra puanı iptal edildi. Tüm maçlar 1 puan.
+                        w_val = 1.0 
 
                         if row['Takım 1'] == t1:
                             t1_wins += w1; t2_wins += w2
@@ -380,15 +381,9 @@ def hesapla_tum_puan_durumu(df_girdi):
     df['T2_Match_Win'] = (df['T2_Set_Skor'] > df['T1_Set_Skor']).astype(int)
     
     def get_match_point(row, team_idx):
-        grup = row.get('Grup', '')
-        brans = str(row.get('Branş', '')).lower()
-        is_cift = "çift" in brans
-        format_secimi = st.session_state.grup_formatlari.get(grup, "3 Maçlık (2 Tek, 1 Çift)")
-        
-        if format_secimi == "5 Maçlık (3 Tek, 2 Çift)":
-            weight = 1.5 if is_cift else 1.0
-        else:
-            weight = 2.0 if is_cift else 1.0
+        # MÜDAHALE: Çiftler ekstra ağırlığı tamamen kaldırıldı. 
+        # Artık her alt maç (1.Tek, 2.Tek, Çiftler) eşittir ve 1 puandır.
+        weight = 1.0 
             
         if team_idx == 1: return weight if row['T1_Match_Win'] > row['T2_Match_Win'] else 0.0
         else: return weight if row['T2_Match_Win'] > row['T1_Match_Win'] else 0.0
@@ -588,13 +583,11 @@ def sirala_grup_df(grup_df, gp, ham_maclar_df=None):
                                 mini_tablo_df.index = range(1, len(mini_tablo_df) + 1)
                                 grup_averaj_tablolari[f"({', '.join(t_list)}) Takımları {averaj_baslik} Averaj Tablosu (Kör Düğüm)"] = mini_tablo_df
                             else:
-                                # --- DÜZELTME: Kısmi Eşitlikte Doğrudan Kuraya Yönlendirme ---
                                 for idx in range(len(sorted_coklu) - 1):
                                     t1_k = sorted_coklu.iloc[idx]
                                     t2_k = sorted_coklu.iloc[idx + 1]
                                     if t1_k['Maç Av.'] == t2_k['Maç Av.'] and t1_k['Set Av.'] == t2_k['Set Av.'] and t1_k['Oyun Av.'] == t2_k['Oyun Av.']:
                                         kura_gerekir_mesajlari.append(f"⚠️ {averaj_baslik} averaj tablosunda {t1_k['Takım']} ve {t2_k['Takım']} takımları ayrışamamıştır. Kural gereği ikili averaja dönülmez, bu iki takım arasında kura çekimi yapılmalıdır.")
-                                # -------------------------------------------------------------
 
                                 sira_degisti_mi = False
                                 for i in range(len(coklu_sira)):
