@@ -2848,16 +2848,14 @@
     "esame_kasasi": {
       "Erkekler GRUP A_1. Gün_1 ve 4": {
         "Alaplı Anadolu Lisesi (Erkekler) (Erkekler)": {
-          "2. Tekler": "",
-          "1. Tekler": "",
-          "Çiftler": "",
-          "_kaynak": "Başhakem"
+          "2. Tekler": "Emre Kılıç",
+          "1. Tekler": "Batuhan Yılmaz",
+          "Çiftler": "Emre Kılıç, Efe Aydın"
         },
         "Buca Fen Lisesi (Erkekler) (Erkekler)": {
-          "2. Tekler": "",
-          "1. Tekler": "",
-          "Çiftler": "",
-          "_kaynak": "Başhakem"
+          "2. Tekler": "Mert Öztürk",
+          "1. Tekler": "Emre Arslan",
+          "Çiftler": "Can Çetin, Mert Öztürk"
         }
       }
     },
