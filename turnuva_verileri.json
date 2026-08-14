@@ -2845,7 +2845,15 @@
       "Çaycuma TSO Fen Lisesi (Erkekler) (Erkekler)": 2988,
       "Çaycuma TSO Fen Lisesi (Kadınlar) (Kadınlar)": 3051
     },
-    "esame_kasasi": {},
+    "esame_kasasi": {
+      "Erkekler GRUP A_1. Gün_1 ve 4": {
+        "Alaplı Anadolu Lisesi (Erkekler) (Erkekler)": {
+          "2. Tekler": "Emre Kılıç",
+          "1. Tekler": "Batuhan Yılmaz",
+          "Çiftler": "Emre Kılıç, Efe Aydın"
+        }
+      }
+    },
     "esame_onayli": {},
     "mac_programi": [
       {
