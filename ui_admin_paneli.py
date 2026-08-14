@@ -252,6 +252,43 @@ def grup_ayarlari_ciz(aktif_asama):
                 if st.session_state.takim_havuzu:
                     st.write(f"📊 Sistemde şu an **{len(st.session_state.takim_havuzu)}** hazır takım bulunuyor.")
                     
+                    # YENİ EKLENEN: GRUPLAR OLUŞTURULMADAN ÖNCE SERİBAŞI VİTRİNİ
+                    with st.expander("🏆 Kategori Bazlı Seribaşı (Kura) Sıralaması", expanded=True):
+                        st.info("💡 Grupları oluştururken takımları aşağıdaki güç sıralamasına göre dengeli dağıtabilirsiniz. (Takım Puanı = En yüksek puanlı 2 oyuncunun toplamı)")
+                        
+                        kat_gruplari = {}
+                        for t_isim, oyuncular in st.session_state.takim_havuzu.items():
+                            kat = st.session_state.havuz_kategorileri.get(t_isim, "Bilinmiyor")
+                            t_puan = 0
+                            if oyuncular and isinstance(oyuncular[0], dict):
+                                t_puan = sum(sorted([o.get('puan', 0) for o in oyuncular], reverse=True)[:2])
+                            
+                            if kat not in kat_gruplari: kat_gruplari[kat] = []
+                            kat_gruplari[kat].append({"takim": t_isim, "puan": t_puan})
+                            
+                        for kat, t_list in dogal_sirala(list(kat_gruplari.items())):
+                            st.markdown(f"#### 📂 {kat}")
+                            t_list.sort(key=lambda x: x["puan"], reverse=True)
+                            
+                            mevcut_sira = 1
+                            puansiz_sira = sum(1 for x in t_list if x["puan"] > 0) + 1 if any(x["puan"] > 0 for x in t_list) else 1
+                            
+                            sira_tablosu = []
+                            for tp in t_list:
+                                t_isim = tp["takim"]
+                                t_puan = tp["puan"]
+                                if t_puan > 0:
+                                    t_seed = mevcut_sira
+                                    mevcut_sira += 1
+                                    seed_label = f"{t_seed}. Seribaşı"
+                                else:
+                                    t_seed = puansiz_sira
+                                    seed_label = f"Puansız Torba"
+                                
+                                sira_tablosu.append({"Kura Torbası": seed_label, "Takım Adı": t_isim, "Takım Puanı": t_puan})
+                                
+                            st.dataframe(pd.DataFrame(sira_tablosu), use_container_width=True, hide_index=True)
+
                     with st.expander("👀 Havuzdaki Takımları Gör ve Yönet", expanded=False):
                         for t_isim, oyuncular in list(st.session_state.takim_havuzu.items()):
                             kategori = st.session_state.havuz_kategorileri.get(t_isim, "Bilinmiyor")
