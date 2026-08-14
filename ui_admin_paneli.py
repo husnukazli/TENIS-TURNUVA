@@ -185,52 +185,61 @@ def grup_ayarlari_ciz(aktif_asama):
     
     if st.session_state.admin_mi:
         if aktif_asama == "1. Aşama":
-            with st.expander("📥 Akıllı Havuz: Excel / CSV'den Takım Yükle", expanded=False):
-                st.info("ℹ️ Excel dosyanızın düzenini seçin ve yükleyin. Seçtiğiniz kategori etiketiyle sisteme işlenecektir.")
+            with st.expander("📥 Akıllı Puanlı Havuz: Excel'den Takım Yükle", expanded=False):
+                st.info("ℹ️ Excel dosyanız 3 sütunlu bloklar halinde olmalıdır (1. Sütun: Sıra, 2. Sütun: İsim, 3. Sütun: Puan). 0. Satırda ortada Takım Adı bulunmalıdır.")
                 
                 up_kat = st.radio("Yüklenecek Dosyanın Kategorisi:", ["Erkekler", "Kadınlar"], horizontal=True, key="up_kat")
                 
-                dosya_duzeni = st.radio("Excel/CSV İçindeki Dosya Düzeni (Çok Önemli):", [
-                    "⬇️ Sütunlarda (1. Satır Takım Adı, Altındaki Satırlar Oyuncular)", 
-                    "➡️ Satırlarda (1. Sütun Takım Adı, Yanındaki Sütunlar Oyuncular)"
-                ])
-                
-                uploaded_file = st.file_uploader("Takım listesini yükleyin (.xlsx veya .csv)", type=["csv", "xlsx"])
+                uploaded_file = st.file_uploader("Puanlı takım listesini yükleyin (.xlsx veya .xls)", type=["xls", "xlsx"])
                 if uploaded_file:
                     try:
-                        if uploaded_file.name.endswith('.csv'):
-                            df_havuz = pd.read_csv(uploaded_file, sep=None, engine='python', header=None, dtype=str)
-                        else: 
-                            df_havuz = pd.read_excel(uploaded_file, header=None, dtype=str)
-                        
-                        if "Satırlarda" in dosya_duzeni:
-                            df_havuz = df_havuz.set_index(0).T
-                        else:
-                            df_havuz.columns = df_havuz.iloc[0]
-                            df_havuz = df_havuz[1:]
-                        
+                        df_havuz = pd.read_excel(uploaded_file, header=None)
                         yeni_havuz = {}
-                        for col in df_havuz.columns:
-                            t_adi = str(col).strip()
-                            if t_adi and t_adi.lower() != 'nan' and "unnamed" not in t_adi.lower() and "takım adı" not in t_adi.lower() and "takim adi" not in t_adi.lower():
-                                oyuncular = df_havuz[col].dropna().astype(str).tolist()
-                                temiz_oyuncular = [o.strip() for o in oyuncular if o.strip() and o.strip().lower() != 'nan']
+                        
+                        # 3 sütunluk adımlarla Excel'i tarama
+                        for i in range(0, len(df_havuz.columns), 3):
+                            if i + 1 < len(df_havuz.columns):
+                                t_adi_raw = df_havuz.iloc[0, i+1]
+                                t_adi = str(t_adi_raw).strip() if pd.notna(t_adi_raw) else ""
                                 
-                                if temiz_oyuncular:
-                                    yeni_havuz[t_adi] = temiz_oyuncular
+                                if t_adi and t_adi.lower() != 'nan' and "unnamed" not in t_adi.lower():
+                                    oyuncular = []
+                                    for idx in range(1, len(df_havuz)):
+                                        isim_val = df_havuz.iloc[idx, i+1]
+                                        isim = str(isim_val).strip() if pd.notna(isim_val) else ""
+                                        
+                                        if isim and isim.lower() != 'nan':
+                                            puan_val = df_havuz.iloc[idx, i+2] if (i+2 < len(df_havuz.columns)) else 0
+                                            try: 
+                                                puan = int(float(puan_val)) if pd.notna(puan_val) else 0
+                                            except: 
+                                                puan = 0
+                                            
+                                            sira_val = df_havuz.iloc[idx, i]
+                                            try: 
+                                                sira = int(float(sira_val)) if pd.notna(sira_val) else len(oyuncular)+1
+                                            except: 
+                                                sira = len(oyuncular)+1
+                                            
+                                            oyuncular.append({"sira": sira, "isim": isim, "puan": puan})
+                                            
+                                    if oyuncular:
+                                        yeni_havuz[t_adi] = oyuncular
                         
                         st.markdown("#### 👀 Sisteme Kaydedilecek Dosya Önizlemesi")
-                        preview_df = pd.DataFrame([{"Takım Adı": k, "Sistemin Okuduğu Kadro": ", ".join(v)} for k, v in yeni_havuz.items()])
-                        st.dataframe(preview_df, use_container_width=True)
-                        
-                        st.warning("⚠️ **Lütfen Dikkat:** Yukarıdaki listeyi kontrol edin. Her şey doğruysa aşağıdaki 'Havuza Kaydet' butonuna basın. Dosyayı yüklemiş olmanız henüz kaydedildiği anlamına gelmez!")
+                        preview_data = []
+                        for k, v in yeni_havuz.items():
+                            kadro_str = ", ".join([f"{o['isim']} ({o['puan']}p)" for o in v])
+                            preview_data.append({"Takım Adı": k, "Sistemin Okuduğu Puanlı Kadro": kadro_str})
+                            
+                        st.dataframe(pd.DataFrame(preview_data), use_container_width=True)
+                        st.warning("⚠️ Yukarıdaki listeyi ve puanları kontrol edin. Her şey doğruysa aşağıdaki 'Havuza Kaydet' butonuna basın.")
                         
                         if st.button("✅ Önizlemeyi Onayla ve Havuza Kaydet", type="primary"):
-                            for t_adi, temiz_oyuncular in yeni_havuz.items():
+                            for t_adi, o_list in yeni_havuz.items():
                                 benzersiz_t_adi = f"{t_adi.strip()} ({up_kat})"
-                                    
                                 st.session_state.havuz_kategorileri[benzersiz_t_adi] = up_kat
-                                st.session_state.takim_havuzu[benzersiz_t_adi] = temiz_oyuncular
+                                st.session_state.takim_havuzu[benzersiz_t_adi] = o_list
                             
                             if ortak_veriyi_kaydet():
                                 st.success(f"✅ Başarılı! Takımlar '{up_kat}' etiketiyle sisteme güvenle kaydedildi.")
@@ -238,7 +247,7 @@ def grup_ayarlari_ciz(aktif_asama):
                                 st.error("Sistem meşgul, lütfen tekrar deneyin.")
                             
                     except Exception as e:
-                        st.error(f"Dosya okuma hatası: {e}. Lütfen formatın doğru olduğundan emin olun.")
+                        st.error(f"Dosya okuma hatası: {e}. Lütfen hazırladığınız şablonun doğru formatta olduğundan emin olun.")
                 
                 if st.session_state.takim_havuzu:
                     st.write(f"📊 Sistemde şu an **{len(st.session_state.takim_havuzu)}** hazır takım bulunuyor.")
@@ -250,7 +259,11 @@ def grup_ayarlari_ciz(aktif_asama):
                             c1, c2 = st.columns([4, 1])
                             with c1:
                                 st.markdown(f"**🛡️ {t_isim}** *(Kategori: {kategori})*")
-                                st.caption(", ".join(oyuncular))
+                                if isinstance(oyuncular, list) and len(oyuncular)>0 and isinstance(oyuncular[0], dict):
+                                    p_strs = [f"{o['sira']}. {o['isim']} ({o['puan']}p)" for o in oyuncular]
+                                    st.caption(" | ".join(p_strs))
+                                else:
+                                    st.caption(", ".join(oyuncular))
                             with c2:
                                 if st.button("❌ Sil", key=f"del_havuz_{t_isim}"):
                                     del st.session_state.takim_havuzu[t_isim]
@@ -375,16 +388,40 @@ def grup_ayarlari_ciz(aktif_asama):
                         t_isim = secim; def_kadro = ""
                 else:
                     t_isim = secim
-                    def_kadro = "\n".join(st.session_state.takim_havuzu.get(secim, []))
+                    oyuncular_data = st.session_state.takim_havuzu.get(secim, [])
+                    if oyuncular_data and isinstance(oyuncular_data[0], dict):
+                        def_kadro = "\n".join([f"{o['isim']} - {o['puan']}" for o in oyuncular_data])
+                    else:
+                        def_kadro = "\n".join(oyuncular_data)
                 
-                oyuncular_raw = st.text_area(f"✍️ Kadro (Her satıra bir kişi)", value=def_kadro, key=f"input_kadro_{i}_{secim}", height=150)
-                oyuncu_listesi = [o.strip() for o in oyuncular_raw.split('\n') if o.strip()]
-                if len(oyuncu_listesi) > 10:
+                oyuncular_raw = st.text_area(f"✍️ Kadro (Örn: Ahmet - 500)", value=def_kadro, key=f"input_kadro_{i}_{secim}", height=150)
+                
+                oyuncu_listesi_str = []
+                oyuncu_listesi_dict = []
+                for idx_line, line in enumerate(oyuncular_raw.split('\n')):
+                    line = line.strip()
+                    if line:
+                        if "-" in line:
+                            parts = line.split('-')
+                            isim = parts[0].strip()
+                            try: puan = int(parts[-1].strip())
+                            except: puan = 0
+                        else:
+                            isim = line
+                            puan = 0
+                        oyuncu_listesi_str.append(isim)
+                        oyuncu_listesi_dict.append({"sira": idx_line+1, "isim": isim, "puan": puan})
+                        
+                if len(oyuncu_listesi_str) > 10:
                     st.error("Maksimum 10 oyuncu sınırı aşıldı!")
                     kadro_hata = True
                 if t_isim:
                     takimlar.append(t_isim)
-                    grup_kadrolari[t_isim] = oyuncu_listesi if oyuncu_listesi else ["Belirtilmedi"]
+                    # Sadece isimleri kadroya yazıyoruz ki eski altyapı çökmesin
+                    grup_kadrolari[t_isim] = oyuncu_listesi_str if oyuncu_listesi_str else ["Belirtilmedi"]
+                    # Puanlı halini ise havuza geri kaydediyoruz
+                    st.session_state.takim_havuzu[t_isim] = oyuncu_listesi_dict
+                    st.session_state.havuz_kategorileri[t_isim] = kategori_secimi
 
         if st.button("🚀 Grubu Oluştur ve Kadroları Kaydet"):
             cakisan_takimlar = [t for t in takimlar if t in baska_gruplardaki_takimlar]
@@ -394,11 +431,6 @@ def grup_ayarlari_ciz(aktif_asama):
             elif not grup_adi_raw or len(takimlar) != beklenen_sayi or kadro_hata or len(set(takimlar)) != beklenen_sayi:
                 st.error("Lütfen grup özel adını girin, tüm takımları eksiksiz/farklı doldurun ve kurallara uyun.")
             else:
-                for t_n, o_list in grup_kadrolari.items():
-                    if t_n not in st.session_state.takim_havuzu:
-                        st.session_state.takim_havuzu[t_n] = o_list
-                        st.session_state.havuz_kategorileri[t_n] = kategori_secimi
-                
                 st.session_state.takim_kadrolari[grup_adi_temiz] = grup_kadrolari
                 st.session_state.grup_formatlari[grup_adi_temiz] = "3 Maçlık (2 Tek, 1 Çift)"
                 st.session_state.grup_kategorileri[grup_adi_temiz] = kategori_secimi
@@ -525,7 +557,7 @@ def grup_ayarlari_ciz(aktif_asama):
                 
         if st.session_state.takim_kadrolari:
             st.markdown("---")
-            st.markdown(f"### 📁 Mevcut Kayıtlı Gruplar ve Kadrolar ({aktif_asama})")
+            st.markdown(f"### 📁 Mevcut Kayıtlı Gruplar ve Seribaşı Sıralaması ({aktif_asama})")
             gosterilecek_gruplar_klasor = dogal_sirala([g for g in st.session_state.takim_kadrolari.keys() if st.session_state.grup_asamalari.get(g, "1. Aşama") == aktif_asama])
             
             kategori_dict = {}
@@ -563,10 +595,51 @@ def grup_ayarlari_ciz(aktif_asama):
                         
                         with st.expander(f"📁 {g_isim} ({f_turu}) | {grup_tarih_metni}"):
                             g_kadro = st.session_state.takim_kadrolari[g_isim]
-                            for t_isim in dogal_sirala(list(g_kadro.keys())):
-                                st.markdown(f"**🛡️ {t_isim}**")
+                            
+                            # TAKIM PUANLARINI VE SERİBAŞI SİSTEMİNİ HESAPLA
+                            takim_puan_listesi = []
+                            for t_isim in g_kadro.keys():
+                                t_puan = 0
+                                havuz_veri = st.session_state.takim_havuzu.get(t_isim, [])
+                                if havuz_veri and isinstance(havuz_veri[0], dict):
+                                    # En yüksek 2 puanı bulup topla
+                                    puanlar = sorted([o.get('puan', 0) for o in havuz_veri], reverse=True)
+                                    t_puan = sum(puanlar[:2])
+                                takim_puan_listesi.append({"takim": t_isim, "puan": t_puan})
+                                
+                            takim_puan_listesi.sort(key=lambda x: x["puan"], reverse=True)
+                            
+                            seribasi_map = {}
+                            mevcut_sira = 1
+                            puansiz_sira = sum(1 for x in takim_puan_listesi if x["puan"] > 0) + 1 if any(x["puan"] > 0 for x in takim_puan_listesi) else 1
+                            
+                            for tp in takim_puan_listesi:
+                                if tp["puan"] > 0:
+                                    seribasi_map[tp["takim"]] = mevcut_sira
+                                    mevcut_sira += 1
+                                else:
+                                    seribasi_map[tp["takim"]] = puansiz_sira
+                            
+                            # SIRALI VE PUANLI OLARAK EKRANA YAZDIR
+                            for tp in takim_puan_listesi:
+                                t_isim = tp["takim"]
+                                t_puan = tp["puan"]
+                                t_seed = seribasi_map[t_isim]
+                                
+                                seed_label = f"{t_seed}. Seribaşı" if t_puan > 0 else f"{t_seed}. Torba (Puansız)"
+                                st.markdown(f"**🛡️ {t_isim}** *(Kura: {seed_label} | Takım Puanı: {t_puan})*")
+                                
+                                havuz_veri = st.session_state.takim_havuzu.get(t_isim, [])
+                                if havuz_veri and isinstance(havuz_veri[0], dict):
+                                    oyuncu_dict_map = {o['isim']: o['puan'] for o in havuz_veri}
+                                else:
+                                    oyuncu_dict_map = {}
+                                
                                 if g_kadro[t_isim] and g_kadro[t_isim] != ["Belirtilmedi"]:
-                                    liste_metni = "<br>".join([f"**{i+1}.** {oyuncu}" for i, oyuncu in enumerate(g_kadro[t_isim])])
+                                    liste_metni = ""
+                                    for idx_o, oyuncu in enumerate(g_kadro[t_isim]):
+                                        o_puan = oyuncu_dict_map.get(oyuncu, 0)
+                                        liste_metni += f"**{idx_o+1}.** {oyuncu} *({o_puan} Puan)*<br>"
                                     st.markdown(liste_metni, unsafe_allow_html=True)
                                 else:
                                     st.write("Oyuncu yok")
@@ -739,15 +812,46 @@ def yonetim_ve_dosya_ciz(aktif_asama):
                                 if i < len(mevcut_takim_isimleri) and y_ad != esk_ad: 
                                     isim_degisiklikleri[esk_ad] = y_ad
                                     if y_ad == bye_opt:
-                                        aktif_oyuncular = ["(Boş)"]
+                                        def_kadro_txt = "(Boş)"
                                     else:
-                                        aktif_oyuncular = st.session_state.takim_havuzu.get(y_ad, ["Oyuncu Bulunamadı"])
+                                        oyuncular_data = st.session_state.takim_havuzu.get(y_ad, [])
+                                        if oyuncular_data and isinstance(oyuncular_data[0], dict):
+                                            def_kadro_txt = "\n".join([f"{o['isim']} - {o['puan']}" for o in oyuncular_data])
+                                        else:
+                                            def_kadro_txt = "\n".join(oyuncular_data)
                                 else:
-                                    aktif_oyuncular = m_kadrolar.get(esk_ad, ["Belirtilmedi"])
+                                    # Mevcut kadroyu puanlarıyla geri birleştirip text area'ya basıyoruz
+                                    aktif_isimler = m_kadrolar.get(esk_ad, ["Belirtilmedi"])
+                                    havuz_data = st.session_state.takim_havuzu.get(esk_ad, [])
+                                    if havuz_data and isinstance(havuz_data[0], dict):
+                                        puan_dict = {o['isim']: o['puan'] for o in havuz_data}
+                                        def_kadro_txt = "\n".join([f"{isim} - {puan_dict.get(isim, 0)}" for isim in aktif_isimler])
+                                    else:
+                                        def_kadro_txt = "\n".join(aktif_isimler)
                                     
                             with c_b:
-                                y_o_text = st.text_area(f"Oyuncular ({y_ad})", value="\n".join(aktif_oyuncular), key=f"oyuncu_{sec_g}_{i}", height=100)
-                                yeni_k_yapisi[y_ad if y_ad else esk_ad] = [o.strip() for o in y_o_text.split('\n') if o.strip()]
+                                y_o_text = st.text_area(f"Oyuncular ({y_ad})", value=def_kadro_txt, key=f"oyuncu_{sec_g}_{i}", height=100)
+                                
+                                o_isimleri = []
+                                o_dictleri = []
+                                for idx_l, line in enumerate(y_o_text.split('\n')):
+                                    line = line.strip()
+                                    if line:
+                                        if "-" in line:
+                                            parts = line.split('-')
+                                            isim = parts[0].strip()
+                                            try: puan = int(parts[-1].strip())
+                                            except: puan = 0
+                                        else:
+                                            isim = line
+                                            puan = 0
+                                        o_isimleri.append(isim)
+                                        o_dictleri.append({"sira": idx_l+1, "isim": isim, "puan": puan})
+                                        
+                                gecerli_isim = y_ad if y_ad else esk_ad
+                                yeni_k_yapisi[gecerli_isim] = o_isimleri
+                                # Sadece değiştirilen takımın yeni havuz datasını güncelliyoruz
+                                st.session_state.takim_havuzu[gecerli_isim] = o_dictleri
                         
                         if st.button("💾 Yapılan Değişiklikleri Veritabanına Yaz"):
                             g_hedef = yeni_grup_adi if yeni_grup_adi.strip() != "" else sec_g
