@@ -385,6 +385,303 @@
           "isim": "Deniz Kaya",
           "puan": 0
         }
+      ],
+      "Buca Fen Lisesi (Kadınlar) (Kadınlar)": [
+        {
+          "sira": 1,
+          "isim": "Büşra Öztürk",
+          "puan": 400
+        },
+        {
+          "sira": 2,
+          "isim": "Büşra Demir",
+          "puan": 200
+        },
+        {
+          "sira": 3,
+          "isim": "Gizem Öztürk",
+          "puan": 50
+        },
+        {
+          "sira": 4,
+          "isim": "Ceren Çetin",
+          "puan": 0
+        },
+        {
+          "sira": 5,
+          "isim": "Selin Çelik",
+          "puan": 0
+        }
+      ],
+      "Zonguldak BİST Lisesi (Kadınlar) (Kadınlar)": [
+        {
+          "sira": 1,
+          "isim": "Ceren Çelik",
+          "puan": 100
+        },
+        {
+          "sira": 2,
+          "isim": "Aslı Doğan",
+          "puan": 0
+        },
+        {
+          "sira": 3,
+          "isim": "Büşra Arslan",
+          "puan": 0
+        },
+        {
+          "sira": 4,
+          "isim": "Ece Çelik",
+          "puan": 0
+        },
+        {
+          "sira": 5,
+          "isim": "Kübra Aydın",
+          "puan": 0
+        }
+      ],
+      "İzmir Atatürk Lisesi (Kadınlar) (Kadınlar)": [
+        {
+          "sira": 1,
+          "isim": "Ceren Özdemir",
+          "puan": 500
+        },
+        {
+          "sira": 2,
+          "isim": "Merve Yıldırım",
+          "puan": 500
+        },
+        {
+          "sira": 3,
+          "isim": "İrem Çetin",
+          "puan": 300
+        },
+        {
+          "sira": 4,
+          "isim": "Derya Arslan",
+          "puan": 0
+        },
+        {
+          "sira": 5,
+          "isim": "Buse Şahin",
+          "puan": 0
+        }
+      ],
+      "Alaplı Anadolu Lisesi (Kadınlar) (Kadınlar)": [
+        {
+          "sira": 1,
+          "isim": "Ceren Çelik",
+          "puan": 400
+        },
+        {
+          "sira": 2,
+          "isim": "Derya Arslan",
+          "puan": 400
+        },
+        {
+          "sira": 3,
+          "isim": "Ceren Aslan",
+          "puan": 100
+        },
+        {
+          "sira": 4,
+          "isim": "Buse Şahin",
+          "puan": 0
+        },
+        {
+          "sira": 5,
+          "isim": "Ayşe Öztürk",
+          "puan": 0
+        }
+      ],
+      "Kdz. Ereğli Lisesi (Kadınlar) (Kadınlar)": [
+        {
+          "sira": 1,
+          "isim": "İrem Şahin",
+          "puan": 200
+        },
+        {
+          "sira": 2,
+          "isim": "Ece Demir",
+          "puan": 200
+        },
+        {
+          "sira": 3,
+          "isim": "Büşra Çetin",
+          "puan": 50
+        },
+        {
+          "sira": 4,
+          "isim": "Ayşe Kılıç",
+          "puan": 0
+        },
+        {
+          "sira": 5,
+          "isim": "Ceren Demir",
+          "puan": 0
+        }
+      ],
+      "Devrek Anadolu Lisesi (Kadınlar) (Kadınlar)": [
+        {
+          "sira": 1,
+          "isim": "Derya Arslan",
+          "puan": 400
+        },
+        {
+          "sira": 2,
+          "isim": "Gizem Demir",
+          "puan": 300
+        },
+        {
+          "sira": 3,
+          "isim": "Zeynep Kaya",
+          "puan": 300
+        },
+        {
+          "sira": 4,
+          "isim": "Ceren Özdemir",
+          "puan": 200
+        },
+        {
+          "sira": 5,
+          "isim": "Fatma Arslan",
+          "puan": 100
+        }
+      ],
+      "Konak Anadolu Lisesi (Kadınlar) (Kadınlar)": [
+        {
+          "sira": 1,
+          "isim": "Ece Yıldız",
+          "puan": 400
+        },
+        {
+          "sira": 2,
+          "isim": "Ece Kaya",
+          "puan": 400
+        },
+        {
+          "sira": 3,
+          "isim": "Zeynep Demir",
+          "puan": 400
+        },
+        {
+          "sira": 4,
+          "isim": "Defne Arslan",
+          "puan": 100
+        },
+        {
+          "sira": 5,
+          "isim": "Derya Şahin",
+          "puan": 0
+        }
+      ],
+      "İzmir Fen Lisesi (Kadınlar) (Kadınlar)": [
+        {
+          "sira": 1,
+          "isim": "Ece Çetin",
+          "puan": 400
+        },
+        {
+          "sira": 2,
+          "isim": "Büşra Özdemir",
+          "puan": 50
+        },
+        {
+          "sira": 3,
+          "isim": "Fatma Doğan",
+          "puan": 50
+        },
+        {
+          "sira": 4,
+          "isim": "Gizem Arslan",
+          "puan": 50
+        },
+        {
+          "sira": 5,
+          "isim": "Aslı Çelik",
+          "puan": 0
+        }
+      ],
+      "Kozlu Anadolu Lisesi (Kadınlar) (Kadınlar)": [
+        {
+          "sira": 1,
+          "isim": "Ayşe Yıldırım",
+          "puan": 0
+        },
+        {
+          "sira": 2,
+          "isim": "Zeynep Kara",
+          "puan": 0
+        },
+        {
+          "sira": 3,
+          "isim": "Merve Öztürk",
+          "puan": 0
+        },
+        {
+          "sira": 4,
+          "isim": "Fatma Kılıç",
+          "puan": 0
+        },
+        {
+          "sira": 5,
+          "isim": "Ece Çelik",
+          "puan": 0
+        }
+      ],
+      "Çaycuma TSO Fen Lisesi (Kadınlar) (Kadınlar)": [
+        {
+          "sira": 1,
+          "isim": "Buse Yıldırım",
+          "puan": 400
+        },
+        {
+          "sira": 2,
+          "isim": "Buse Kılıç",
+          "puan": 100
+        },
+        {
+          "sira": 3,
+          "isim": "Gizem Yıldız",
+          "puan": 100
+        },
+        {
+          "sira": 4,
+          "isim": "Derya Yıldırım",
+          "puan": 0
+        },
+        {
+          "sira": 5,
+          "isim": "Merve Kara",
+          "puan": 0
+        }
+      ],
+      "Bornova Anadolu Lisesi (Kadınlar) (Kadınlar)": [
+        {
+          "sira": 1,
+          "isim": "Zeynep Çetin",
+          "puan": 400
+        },
+        {
+          "sira": 2,
+          "isim": "İrem Çetin",
+          "puan": 400
+        },
+        {
+          "sira": 3,
+          "isim": "Defne Özdemir",
+          "puan": 100
+        },
+        {
+          "sira": 4,
+          "isim": "Derya Demir",
+          "puan": 50
+        },
+        {
+          "sira": 5,
+          "isim": "Defne Aydın",
+          "puan": 50
+        }
       ]
     },
     "havuz_kategorileri": {
@@ -401,7 +698,18 @@
       "Alaplı Anadolu Lisesi (Erkekler) (Erkekler)": "Erkekler",
       "Konak Anadolu Lisesi (Erkekler) (Erkekler)": "Erkekler",
       "Çaycuma TSO Fen Lisesi (Erkekler) (Erkekler)": "Erkekler",
-      "Kdz. Ereğli Lisesi (Erkekler) (Erkekler)": "Erkekler"
+      "Kdz. Ereğli Lisesi (Erkekler) (Erkekler)": "Erkekler",
+      "Buca Fen Lisesi (Kadınlar) (Kadınlar)": "Kadınlar",
+      "Zonguldak BİST Lisesi (Kadınlar) (Kadınlar)": "Kadınlar",
+      "İzmir Atatürk Lisesi (Kadınlar) (Kadınlar)": "Kadınlar",
+      "Alaplı Anadolu Lisesi (Kadınlar) (Kadınlar)": "Kadınlar",
+      "Kdz. Ereğli Lisesi (Kadınlar) (Kadınlar)": "Kadınlar",
+      "Devrek Anadolu Lisesi (Kadınlar) (Kadınlar)": "Kadınlar",
+      "Konak Anadolu Lisesi (Kadınlar) (Kadınlar)": "Kadınlar",
+      "İzmir Fen Lisesi (Kadınlar) (Kadınlar)": "Kadınlar",
+      "Kozlu Anadolu Lisesi (Kadınlar) (Kadınlar)": "Kadınlar",
+      "Çaycuma TSO Fen Lisesi (Kadınlar) (Kadınlar)": "Kadınlar",
+      "Bornova Anadolu Lisesi (Kadınlar) (Kadınlar)": "Kadınlar"
     },
     "grup_siralamalari": {},
     "grup_tamamlandi": {},
