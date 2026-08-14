@@ -4511,7 +4511,11 @@
       "ŞANSAL ÖZ",
       "FARUK KÜRECİ"
     ],
-    "hakem_pinleri": {},
+    "hakem_pinleri": {
+      "PINAR KOÇ": 7257,
+      "ŞANSAL ÖZ": 5895,
+      "FARUK KÜRECİ": 4622
+    },
     "grup_gun_takvimi": {
       "Erkekler GRUP A": {
         "1. Gün": "14.08.2026",
