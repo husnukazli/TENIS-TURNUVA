@@ -8,8 +8,8 @@
       "id": "a38949ac-6d73-42de-8a3d-fa8858291f5b",
       "Branş": "2. Tekler",
       "Grup": "Erkekler GRUP A",
-      "T1_Oyuncu": "",
-      "T2_Oyuncu": "",
+      "T1_Oyuncu": "Emre Kılıç",
+      "T2_Oyuncu": "Mert Öztürk",
       "1.Set T1": 0,
       "1.Set T2": 0,
       "2.Set T1": 0,
@@ -27,8 +27,8 @@
       "id": "cb9e4e69-ed23-4b14-8e20-673eb647c3ab",
       "Branş": "1. Tekler",
       "Grup": "Erkekler GRUP A",
-      "T1_Oyuncu": "",
-      "T2_Oyuncu": "",
+      "T1_Oyuncu": "Batuhan Yılmaz",
+      "T2_Oyuncu": "Emre Arslan",
       "1.Set T1": 0,
       "1.Set T2": 0,
       "2.Set T1": 0,
@@ -46,8 +46,8 @@
       "id": "4625a140-5c15-400e-b900-042467735e57",
       "Branş": "Çiftler",
       "Grup": "Erkekler GRUP A",
-      "T1_Oyuncu": "",
-      "T2_Oyuncu": "",
+      "T1_Oyuncu": "Emre Kılıç, Efe Aydın",
+      "T2_Oyuncu": "Can Çetin, Mert Öztürk",
       "1.Set T1": 0,
       "1.Set T2": 0,
       "2.Set T1": 0,
@@ -2874,7 +2874,8 @@
       }
     },
     "esame_onayli": {
-      "Erkekler GRUP B_1. Gün_2 ve 3": true
+      "Erkekler GRUP B_1. Gün_2 ve 3": true,
+      "Erkekler GRUP A_1. Gün_1 ve 4": true
     },
     "mac_programi": [
       {
