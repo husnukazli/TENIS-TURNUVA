@@ -2857,6 +2857,20 @@
           "1. Tekler": "Emre Arslan",
           "Çiftler": "Can Çetin, Mert Öztürk"
         }
+      },
+      "Erkekler GRUP B_1. Gün_2 ve 3": {
+        "İzmir Atatürk Lisesi (Erkekler) (Erkekler)": {
+          "2. Tekler": "Veli Arslan",
+          "1. Tekler": "Emre Yılmaz",
+          "Çiftler": "Hüseyin Aslan, Veli Arslan",
+          "_kaynak": "Hakem"
+        },
+        "İzmir Fen Lisesi (Erkekler) (Erkekler)": {
+          "2. Tekler": "Ahmet Yıldız",
+          "1. Tekler": "Veli Aydın",
+          "Çiftler": "Veli Aydın, Efe Öztürk",
+          "_kaynak": "Hakem"
+        }
       }
     },
     "esame_onayli": {},
