@@ -2199,10 +2199,19 @@ else:
                             if not oyuncular or oyuncular == ["Belirtilmedi"]:
                                 st.warning("Bu takım için henüz oyuncu kadrosu girilmemiş.")
                             else:
+                                # YENİ EKLENEN: OYUNCU PUANLARINI HAFIZADAN ÇEKME MANTIĞI
+                                havuz_data = st.session_state.takim_havuzu.get(t_isim, [])
+                                puan_map = {}
+                                if havuz_data and isinstance(havuz_data[0], dict):
+                                    for o_dict in havuz_data:
+                                        puan_map[o_dict['isim']] = o_dict.get('puan', 0)
+                                        
                                 html_liste = "<ul style='list-style-type: none; padding-left: 0; margin-top: 5px;'>"
                                 for idx_o, oyuncu in enumerate(oyuncular):
                                     sira_no = idx_o + 1
-                                    html_liste += f"<li style='padding: 6px 0; border-bottom: 1px solid #eee; font-size: 15px;'><b>{sira_no}.</b> {oyuncu}</li>"
+                                    o_puan = puan_map.get(oyuncu, 0)
+                                    puan_etiketi = f" <span style='color: #0B3B24; font-size: 13px; font-weight: 500;'>({o_puan} Puan)</span>" if o_puan > 0 else " <span style='color: #888; font-size: 13px;'>(0 Puan)</span>"
+                                    html_liste += f"<li style='padding: 6px 0; border-bottom: 1px solid #eee; font-size: 15px;'><b>{sira_no}.</b> {oyuncu}{puan_etiketi}</li>"
                                 html_liste += "</ul>"
                                 st.markdown(html_liste, unsafe_allow_html=True)
 
