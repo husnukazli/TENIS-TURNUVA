@@ -86,7 +86,7 @@ def generate_pdf(df, baslik, not_metni="", kategori_map=None):
     if len(df_print.columns) > 0:
         col_widths = get_proportional_widths(pdf, df_print)
         
-        pdf.set_fill_color(200, 200, 200) # Ana başlık satırı gri kalsın
+        pdf.set_fill_color(200, 200, 200)
         for i, col in enumerate(df_print.columns): 
             pdf_cell_fit(pdf, col_widths[i], 10, col, is_bold=True, fill=True, base_size=10)
         pdf.ln()
@@ -109,7 +109,6 @@ def generate_pdf(df, baslik, not_metni="", kategori_map=None):
                         if str(row["Takım 1"]).startswith("**") and str(row["Takım 2"]).startswith("**"):
                             is_takim_satiri = True
 
-            # --- YENİ: SAYFA BÖLÜNMESİNİ ENGELLEME KONTROLÜ ---
             if is_takim_satiri:
                 alt_satir_sayisi = 0
                 for next_idx in range(row_idx + 1, len(df_reset)):
@@ -132,29 +131,24 @@ def generate_pdf(df, baslik, not_metni="", kategori_map=None):
                         break
                     alt_satir_sayisi += 1
                 
-                # Başlık + Alt maçlar yüksekliği (her biri için 8 birim) + 5 birim pay
                 gerekli_yukseklik = (1 + alt_satir_sayisi) * 8 + 5
                 
-                # A4 sayfası uzunluğu 297mm'dir. Alt boşluk payı olarak 275'i sınır belirliyoruz.
                 if pdf.get_y() + gerekli_yukseklik > 275:
                     pdf.add_page()
-                    # Yeni sayfa açılınca tablo sütun başlıklarını tekrar bas
                     pdf.set_fill_color(200, 200, 200)
                     for i, col in enumerate(df_print.columns): 
                         pdf_cell_fit(pdf, col_widths[i], 10, col, is_bold=True, fill=True, base_size=10)
                     pdf.ln()
-            # ----------------------------------------------------
 
-            # --- KATEGORİYE GÖRE RENKLENDİRME ---
             if is_takim_satiri:
                 g_val = str(row.get("Grup", ""))
                 kat_ismi = str(kategori_map.get(g_val, "")).lower()
                 if "kadın" in kat_ismi or "kız" in kat_ismi:
-                    pdf.set_fill_color(255, 220, 235) # Açık Pembe
+                    pdf.set_fill_color(255, 220, 235) 
                 elif "erkek" in kat_ismi:
-                    pdf.set_fill_color(220, 235, 255) # Açık Mavi
+                    pdf.set_fill_color(220, 235, 255) 
                 else:
-                    pdf.set_fill_color(225, 225, 225) # Standart Gri
+                    pdf.set_fill_color(225, 225, 225) 
             
             for i, item in enumerate(row): 
                 text = str(item)
@@ -200,11 +194,10 @@ def generate_combined_standings_pdf(gruplar_dict, manuel_gruplar=None, averaj_ta
         apply_font(pdf, bold=True, size=12)
         pdf.cell(0, 10, to_pdf_text(grup_adi + " Puan Durumu"), ln=True, align='L')
         
-        # --- KATEGORİYE GÖRE RENKLENDİRME ---
         kat_ismi = str(kategori_map.get(grup_adi, "")).lower()
-        if "kadın" in kat_ismi or "kız" in kat_ismi: r, g, b = 255, 220, 235 # Açık pembe
-        elif "erkek" in kat_ismi: r, g, b = 220, 235, 255 # Açık mavi
-        else: r, g, b = 200, 200, 200 # Standart gri
+        if "kadın" in kat_ismi or "kız" in kat_ismi: r, g, b = 255, 220, 235
+        elif "erkek" in kat_ismi: r, g, b = 220, 235, 255
+        else: r, g, b = 200, 200, 200
         
         if len(df.columns) > 0:
             col_widths = get_proportional_widths(pdf, df)
@@ -217,7 +210,6 @@ def generate_combined_standings_pdf(gruplar_dict, manuel_gruplar=None, averaj_ta
                     pdf_cell_fit(pdf, col_widths[i], 8, str(item), is_bold=False)
                 pdf.ln()
 
-        # --- AÇIKLAMA METİNLERİNİ PDF'E BASMA ---
         if grup_adi in averaj_bilgileri:
             pdf.ln(3)
             apply_font(pdf, bold=False, size=9)
@@ -425,10 +417,10 @@ def generate_mac_sonuc_belgesi(eslesmeler_listesi):
         pdf.set_xy(70, y_header)
         pdf_cell_fit(pdf, 70, 8, grup_adi, border=0, align='C', is_bold=True, base_size=14)
         
-        pdf.set_xy(140, y_header) # (ÜST KANCA - DEĞİŞMEYECEK)
+        pdf.set_xy(140, y_header)
         kort_metni = f"Kort: {kort}" if kort else "Kort: ...."
-        apply_font(pdf, bold=True, size=24) # Fontu 24 yaparak çok daha devasa hale getirdik
-        pdf.cell(60, 12, to_pdf_text(kort_metni), ln=1, align='R') # Sığması için hücre yüksekliğini 12 yaptık
+        apply_font(pdf, bold=True, size=24)
+        pdf.cell(60, 12, to_pdf_text(kort_metni), ln=1, align='R')
         apply_font(pdf, bold=True, size=14)
         
         y_subheader = pdf.get_y()
@@ -465,21 +457,12 @@ def generate_mac_sonuc_belgesi(eslesmeler_listesi):
         if not alt_maclar:
             alt_maclar = [{"Branş": "2. Tekler"}, {"Branş": "1. Tekler"}, {"Branş": "Çiftler"}]
             
-        is_beslik_format = len(alt_maclar) > 3
-            
         for mac in alt_maclar:
             brans = mac.get("Branş", "")
             
             alt_etiket = ""
-            if is_beslik_format:
-                if "3. Tekler" in brans: alt_etiket = "(1 Nolu)"
-                elif "2. Tekler" in brans: alt_etiket = "(2 Nolu)"
-                elif "1. Tekler" in brans: alt_etiket = "(3 Nolu)"
-                elif "2. Çiftler" in brans: alt_etiket = "(Sıra Top. Yüksek)"
-                elif "1. Çiftler" in brans: alt_etiket = "(Sıra Top. Düşük)"
-            else:
-                if "2. Tekler" in brans: alt_etiket = "(1 Nolu)"
-                elif "1. Tekler" in brans: alt_etiket = "(2 Nolu)"
+            if "2. Tekler" in brans: alt_etiket = "(1 Nolu)"
+            elif "1. Tekler" in brans: alt_etiket = "(2 Nolu)"
                 
             brans_metni = f"{brans}\n{alt_etiket}" if alt_etiket else brans
             
