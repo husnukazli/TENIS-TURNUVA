@@ -1,6 +1,8 @@
-graphviz
+
 fpdf2
-openpyxl
+
 pandas
 streamlit
-PyGithub==2.3.0
+
+
+PyGithub
