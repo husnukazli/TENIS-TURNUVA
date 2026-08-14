@@ -7,8 +7,402 @@
     "grup_asamalari": {},
     "duyuru_metni": "",
     "gunluk_notlar": {},
-    "takim_havuzu": {},
-    "havuz_kategorileri": {},
+    "takim_havuzu": {
+      "Buca Fen Lisesi (Erkekler) (Erkekler)": [
+        {
+          "sira": 1,
+          "isim": "Hüseyin Öztürk",
+          "puan": 500
+        },
+        {
+          "sira": 2,
+          "isim": "Emre Arslan",
+          "puan": 400
+        },
+        {
+          "sira": 3,
+          "isim": "Mert Öztürk",
+          "puan": 100
+        },
+        {
+          "sira": 4,
+          "isim": "Can Çetin",
+          "puan": 0
+        },
+        {
+          "sira": 5,
+          "isim": "Deniz Yıldız",
+          "puan": 0
+        }
+      ],
+      "Karşıyaka Lisesi (Erkekler) (Erkekler)": [
+        {
+          "sira": 1,
+          "isim": "Oğuz Özdemir",
+          "puan": 400
+        },
+        {
+          "sira": 2,
+          "isim": "Batuhan Aslan",
+          "puan": 400
+        },
+        {
+          "sira": 3,
+          "isim": "Kaan Aydın",
+          "puan": 400
+        },
+        {
+          "sira": 4,
+          "isim": "Ali Aydın",
+          "puan": 200
+        },
+        {
+          "sira": 5,
+          "isim": "Mert Yıldırım",
+          "puan": 0
+        }
+      ],
+      "İzmir Fen Lisesi (Erkekler) (Erkekler)": [
+        {
+          "sira": 1,
+          "isim": "Oğuz Çelik",
+          "puan": 500
+        },
+        {
+          "sira": 2,
+          "isim": "Veli Aydın",
+          "puan": 300
+        },
+        {
+          "sira": 3,
+          "isim": "Burak Özdemir",
+          "puan": 100
+        },
+        {
+          "sira": 4,
+          "isim": "Ahmet Yıldız",
+          "puan": 50
+        },
+        {
+          "sira": 5,
+          "isim": "Efe Öztürk",
+          "puan": 0
+        }
+      ],
+      "Zonguldak BİST Lisesi (Erkekler) (Erkekler)": [
+        {
+          "sira": 1,
+          "isim": "Oğuz Yıldız",
+          "puan": 300
+        },
+        {
+          "sira": 2,
+          "isim": "Cem Özdemir",
+          "puan": 50
+        },
+        {
+          "sira": 3,
+          "isim": "Oğuz Doğan",
+          "puan": 50
+        },
+        {
+          "sira": 4,
+          "isim": "Burak Demir",
+          "puan": 0
+        },
+        {
+          "sira": 5,
+          "isim": "Hüseyin Doğan",
+          "puan": 0
+        }
+      ],
+      "Devrek Anadolu Lisesi (Erkekler) (Erkekler)": [
+        {
+          "sira": 1,
+          "isim": "Can Şahin",
+          "puan": 300
+        },
+        {
+          "sira": 2,
+          "isim": "Mehmet Şahin",
+          "puan": 100
+        },
+        {
+          "sira": 3,
+          "isim": "Burak Şahin",
+          "puan": 50
+        },
+        {
+          "sira": 4,
+          "isim": "Mert Şahin",
+          "puan": 0
+        },
+        {
+          "sira": 5,
+          "isim": "Can Aslan",
+          "puan": 0
+        }
+      ],
+      "İzmir Atatürk Lisesi (Erkekler) (Erkekler)": [
+        {
+          "sira": 1,
+          "isim": "Hüseyin Doğan",
+          "puan": 500
+        },
+        {
+          "sira": 2,
+          "isim": "Emre Yılmaz",
+          "puan": 400
+        },
+        {
+          "sira": 3,
+          "isim": "Hüseyin Aslan",
+          "puan": 0
+        },
+        {
+          "sira": 4,
+          "isim": "Veli Arslan",
+          "puan": 0
+        },
+        {
+          "sira": 5,
+          "isim": "Kaan Yıldırım",
+          "puan": 0
+        }
+      ],
+      "Zonguldak Anadolu Lisesi (Erkekler) (Erkekler)": [
+        {
+          "sira": 1,
+          "isim": "Cem Çelik",
+          "puan": 500
+        },
+        {
+          "sira": 2,
+          "isim": "Oğuz Çetin",
+          "puan": 200
+        },
+        {
+          "sira": 3,
+          "isim": "Ahmet Kılıç",
+          "puan": 100
+        },
+        {
+          "sira": 4,
+          "isim": "Ahmet Arslan",
+          "puan": 0
+        },
+        {
+          "sira": 5,
+          "isim": "Cem Özdemir",
+          "puan": 0
+        }
+      ],
+      "Bornova Anadolu Lisesi (Erkekler) (Erkekler)": [
+        {
+          "sira": 1,
+          "isim": "Hüseyin Aslan",
+          "puan": 400
+        },
+        {
+          "sira": 2,
+          "isim": "Burak Kaya",
+          "puan": 300
+        },
+        {
+          "sira": 3,
+          "isim": "Ali Yılmaz",
+          "puan": 100
+        },
+        {
+          "sira": 4,
+          "isim": "Kaan Doğan",
+          "puan": 50
+        },
+        {
+          "sira": 5,
+          "isim": "Emre Öztürk",
+          "puan": 0
+        }
+      ],
+      "Göztepe Mesleki Lisesi (Erkekler) (Erkekler)": [
+        {
+          "sira": 1,
+          "isim": "Efe Çelik",
+          "puan": 300
+        },
+        {
+          "sira": 2,
+          "isim": "Batuhan Yıldız",
+          "puan": 100
+        },
+        {
+          "sira": 3,
+          "isim": "Emre Kara",
+          "puan": 100
+        },
+        {
+          "sira": 4,
+          "isim": "Deniz Çelik",
+          "puan": 50
+        },
+        {
+          "sira": 5,
+          "isim": "Ali Özdemir",
+          "puan": 0
+        }
+      ],
+      "Zonguldak Fen Lisesi (Erkekler) (Erkekler)": [
+        {
+          "sira": 1,
+          "isim": "Batuhan Yıldız",
+          "puan": 500
+        },
+        {
+          "sira": 2,
+          "isim": "Oğuz Çetin",
+          "puan": 500
+        },
+        {
+          "sira": 3,
+          "isim": "Batuhan Şahin",
+          "puan": 200
+        },
+        {
+          "sira": 4,
+          "isim": "Deniz Öztürk",
+          "puan": 100
+        },
+        {
+          "sira": 5,
+          "isim": "Can Demir",
+          "puan": 0
+        }
+      ],
+      "Alaplı Anadolu Lisesi (Erkekler) (Erkekler)": [
+        {
+          "sira": 1,
+          "isim": "Burak Çelik",
+          "puan": 500
+        },
+        {
+          "sira": 2,
+          "isim": "Batuhan Yılmaz",
+          "puan": 300
+        },
+        {
+          "sira": 3,
+          "isim": "Efe Aydın",
+          "puan": 50
+        },
+        {
+          "sira": 4,
+          "isim": "Emre Kılıç",
+          "puan": 50
+        },
+        {
+          "sira": 5,
+          "isim": "Burak Kılıç",
+          "puan": 0
+        }
+      ],
+      "Konak Anadolu Lisesi (Erkekler) (Erkekler)": [
+        {
+          "sira": 1,
+          "isim": "Kaan Öztürk",
+          "puan": 300
+        },
+        {
+          "sira": 2,
+          "isim": "Batuhan Öztürk",
+          "puan": 50
+        },
+        {
+          "sira": 3,
+          "isim": "Oğuz Özdemir",
+          "puan": 50
+        },
+        {
+          "sira": 4,
+          "isim": "Ahmet Aydın",
+          "puan": 0
+        },
+        {
+          "sira": 5,
+          "isim": "Burak Kılıç",
+          "puan": 0
+        }
+      ],
+      "Çaycuma TSO Fen Lisesi (Erkekler) (Erkekler)": [
+        {
+          "sira": 1,
+          "isim": "Hüseyin Yıldırım",
+          "puan": 300
+        },
+        {
+          "sira": 2,
+          "isim": "Deniz Yıldız",
+          "puan": 300
+        },
+        {
+          "sira": 3,
+          "isim": "Ahmet Kılıç",
+          "puan": 300
+        },
+        {
+          "sira": 4,
+          "isim": "Emre Arslan",
+          "puan": 0
+        },
+        {
+          "sira": 5,
+          "isim": "Batuhan Yıldız",
+          "puan": 0
+        }
+      ],
+      "Kdz. Ereğli Lisesi (Erkekler) (Erkekler)": [
+        {
+          "sira": 1,
+          "isim": "Hasan Özdemir",
+          "puan": 400
+        },
+        {
+          "sira": 2,
+          "isim": "Mert Yılmaz",
+          "puan": 300
+        },
+        {
+          "sira": 3,
+          "isim": "Hüseyin Kara",
+          "puan": 300
+        },
+        {
+          "sira": 4,
+          "isim": "Hüseyin Öztürk",
+          "puan": 0
+        },
+        {
+          "sira": 5,
+          "isim": "Deniz Kaya",
+          "puan": 0
+        }
+      ]
+    },
+    "havuz_kategorileri": {
+      "Buca Fen Lisesi (Erkekler) (Erkekler)": "Erkekler",
+      "Karşıyaka Lisesi (Erkekler) (Erkekler)": "Erkekler",
+      "İzmir Fen Lisesi (Erkekler) (Erkekler)": "Erkekler",
+      "Zonguldak BİST Lisesi (Erkekler) (Erkekler)": "Erkekler",
+      "Devrek Anadolu Lisesi (Erkekler) (Erkekler)": "Erkekler",
+      "İzmir Atatürk Lisesi (Erkekler) (Erkekler)": "Erkekler",
+      "Zonguldak Anadolu Lisesi (Erkekler) (Erkekler)": "Erkekler",
+      "Bornova Anadolu Lisesi (Erkekler) (Erkekler)": "Erkekler",
+      "Göztepe Mesleki Lisesi (Erkekler) (Erkekler)": "Erkekler",
+      "Zonguldak Fen Lisesi (Erkekler) (Erkekler)": "Erkekler",
+      "Alaplı Anadolu Lisesi (Erkekler) (Erkekler)": "Erkekler",
+      "Konak Anadolu Lisesi (Erkekler) (Erkekler)": "Erkekler",
+      "Çaycuma TSO Fen Lisesi (Erkekler) (Erkekler)": "Erkekler",
+      "Kdz. Ereğli Lisesi (Erkekler) (Erkekler)": "Erkekler"
+    },
     "grup_siralamalari": {},
     "grup_tamamlandi": {},
     "grup_statuleri": {},
