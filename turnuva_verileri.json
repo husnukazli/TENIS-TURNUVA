@@ -407,8 +407,8 @@
       "id": "ca2a5f63-d29f-4474-9e19-5f9d75637b55",
       "Branş": "2. Tekler",
       "Grup": "Erkekler GRUP B",
-      "T1_Oyuncu": "",
-      "T2_Oyuncu": "",
+      "T1_Oyuncu": "Veli Arslan",
+      "T2_Oyuncu": "Ahmet Yıldız",
       "1.Set T1": 0,
       "1.Set T2": 0,
       "2.Set T1": 0,
@@ -426,8 +426,8 @@
       "id": "945a35e9-c064-43ce-9756-56f7483c0d5e",
       "Branş": "1. Tekler",
       "Grup": "Erkekler GRUP B",
-      "T1_Oyuncu": "",
-      "T2_Oyuncu": "",
+      "T1_Oyuncu": "Emre Yılmaz",
+      "T2_Oyuncu": "Veli Aydın",
       "1.Set T1": 0,
       "1.Set T2": 0,
       "2.Set T1": 0,
@@ -445,8 +445,8 @@
       "id": "11ce2788-8b5b-4b9a-9dd9-2c354f0264e1",
       "Branş": "Çiftler",
       "Grup": "Erkekler GRUP B",
-      "T1_Oyuncu": "",
-      "T2_Oyuncu": "",
+      "T1_Oyuncu": "Hüseyin Aslan, Veli Arslan",
+      "T2_Oyuncu": "Veli Aydın, Efe Öztürk",
       "1.Set T1": 0,
       "1.Set T2": 0,
       "2.Set T1": 0,
@@ -2835,7 +2835,9 @@
         }
       }
     },
-    "esame_onayli": {},
+    "esame_onayli": {
+      "Erkekler GRUP B_1. Gün_2 ve 3": true
+    },
     "mac_programi": [
       {
         "Maç Saati": "10:00",
