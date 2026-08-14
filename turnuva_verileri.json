@@ -4553,7 +4553,9 @@
         "3. Gün": "16.08.2026"
       }
     },
-    "yayinlanan_gunler": {},
+    "yayinlanan_gunler": {
+      "14.08.2026": true
+    },
     "sistem_kilitli": false
   }
 }
