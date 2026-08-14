@@ -407,8 +407,8 @@
       "id": "ca2a5f63-d29f-4474-9e19-5f9d75637b55",
       "Branş": "2. Tekler",
       "Grup": "Erkekler GRUP B",
-      "T1_Oyuncu": "Veli Arslan",
-      "T2_Oyuncu": "Ahmet Yıldız",
+      "T1_Oyuncu": "",
+      "T2_Oyuncu": "",
       "1.Set T1": 0,
       "1.Set T2": 0,
       "2.Set T1": 0,
@@ -426,8 +426,8 @@
       "id": "945a35e9-c064-43ce-9756-56f7483c0d5e",
       "Branş": "1. Tekler",
       "Grup": "Erkekler GRUP B",
-      "T1_Oyuncu": "Emre Yılmaz",
-      "T2_Oyuncu": "Veli Aydın",
+      "T1_Oyuncu": "",
+      "T2_Oyuncu": "",
       "1.Set T1": 0,
       "1.Set T2": 0,
       "2.Set T1": 0,
@@ -445,8 +445,8 @@
       "id": "11ce2788-8b5b-4b9a-9dd9-2c354f0264e1",
       "Branş": "Çiftler",
       "Grup": "Erkekler GRUP B",
-      "T1_Oyuncu": "Hüseyin Aslan, Veli Arslan",
-      "T2_Oyuncu": "Veli Aydın, Efe Öztürk",
+      "T1_Oyuncu": "",
+      "T2_Oyuncu": "",
       "1.Set T1": 0,
       "1.Set T2": 0,
       "2.Set T1": 0,
@@ -2818,26 +2818,43 @@
       "Kadınlar GRUP B": "Play-out Grubu (Düşme Hattı)",
       "Kadınlar GRUP C": "Play-out Grubu (Düşme Hattı)"
     },
-    "takim_pinleri": {},
+    "takim_pinleri": {
+      "Alaplı Anadolu Lisesi (Erkekler) (Erkekler)": 3595,
+      "Alaplı Anadolu Lisesi (Kadınlar) (Kadınlar)": 8425,
+      "Bornova Anadolu Lisesi (Erkekler) (Erkekler)": 1630,
+      "Bornova Anadolu Lisesi (Kadınlar) (Kadınlar)": 8645,
+      "Buca Fen Lisesi (Erkekler) (Erkekler)": 7475,
+      "Buca Fen Lisesi (Kadınlar) (Kadınlar)": 3413,
+      "Devrek Anadolu Lisesi (Erkekler) (Erkekler)": 3916,
+      "Devrek Anadolu Lisesi (Kadınlar) (Kadınlar)": 5032,
+      "Göztepe Mesleki Lisesi (Erkekler) (Erkekler)": 4406,
+      "İzmir Atatürk Lisesi (Erkekler) (Erkekler)": 7577,
+      "İzmir Atatürk Lisesi (Kadınlar) (Kadınlar)": 2095,
+      "İzmir Fen Lisesi (Erkekler) (Erkekler)": 6462,
+      "İzmir Fen Lisesi (Kadınlar) (Kadınlar)": 3168,
+      "Karşıyaka Lisesi (Erkekler) (Erkekler)": 6186,
+      "Kdz. Ereğli Lisesi (Erkekler) (Erkekler)": 4658,
+      "Kdz. Ereğli Lisesi (Kadınlar) (Kadınlar)": 6335,
+      "Konak Anadolu Lisesi (Erkekler) (Erkekler)": 4387,
+      "Konak Anadolu Lisesi (Kadınlar) (Kadınlar)": 1894,
+      "Kozlu Anadolu Lisesi (Kadınlar) (Kadınlar)": 2789,
+      "Zonguldak Anadolu Lisesi (Erkekler) (Erkekler)": 2601,
+      "Zonguldak BİST Lisesi (Erkekler) (Erkekler)": 4522,
+      "Zonguldak BİST Lisesi (Kadınlar) (Kadınlar)": 2430,
+      "Zonguldak Fen Lisesi (Erkekler) (Erkekler)": 3538,
+      "Çaycuma TSO Fen Lisesi (Erkekler) (Erkekler)": 2988,
+      "Çaycuma TSO Fen Lisesi (Kadınlar) (Kadınlar)": 3051
+    },
     "esame_kasasi": {
-      "Erkekler GRUP B_1. Gün_2 ve 3": {
-        "İzmir Atatürk Lisesi (Erkekler) (Erkekler)": {
-          "2. Tekler": "Veli Arslan",
-          "1. Tekler": "Emre Yılmaz",
-          "Çiftler": "Hüseyin Aslan, Veli Arslan",
-          "_kaynak": "Hakem"
-        },
-        "İzmir Fen Lisesi (Erkekler) (Erkekler)": {
-          "2. Tekler": "Ahmet Yıldız",
-          "1. Tekler": "Veli Aydın",
-          "Çiftler": "Veli Aydın, Efe Öztürk",
-          "_kaynak": "Hakem"
+      "Erkekler GRUP A_1. Gün_1 ve 4": {
+        "Alaplı Anadolu Lisesi (Erkekler) (Erkekler)": {
+          "2. Tekler": "Emre Kılıç",
+          "1. Tekler": "Batuhan Yılmaz",
+          "Çiftler": "Emre Kılıç, Efe Aydın"
         }
       }
     },
-    "esame_onayli": {
-      "Erkekler GRUP B_1. Gün_2 ve 3": true
-    },
+    "esame_onayli": {},
     "mac_programi": [
       {
         "Maç Saati": "10:00",
